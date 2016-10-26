@@ -18,5 +18,41 @@
     <ClCompile Include="main.cpp">
       <Filter>头文件</Filter>
     </ClCompile>
+    <ClCompile Include="soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="soapServer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="threads.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="httpget.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GameWebservice.nsmap" />
+    <None Include="soapReadme.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="soapH.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="soapStub.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdsoap2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="threads.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="httpget.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
