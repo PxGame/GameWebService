@@ -207,7 +207,7 @@ This function serves requests by calling one of the service operations listed fu
 This service operation is declared in [GameWebService.h](GameWebService.h) at line 5 and has the following properties:
 
 - REST operation
-- Default service endpoint URL "http://192.168.1.178"
+- Default service endpoint URL "http://localhost"
 - Operation namespace prefix `ns` and URI "[urn:GameWebservice](#doc-namespaces)"
 
 The following service operation function declared in [soapStub.h](Webservice/soapStub.h) must be defined in the service back-end code and will be called by the service dispatcher `soap_serve(soap)` defined in [soapServer.cpp](Webservice/soapServer.cpp), and should return `SOAP_OK` by returning `int soap_send_empty_response(struct soap *soap, int httpcode)` when using HTTP:
@@ -230,5 +230,5 @@ This service function should be implemented as part of the service back-end code
 
 --------------------------------------------------------------------------------
 
-_Generated on Wed Oct 26 2016 06:24:23 UTC by soapcpp2 v2.8.36 for GameWebService.h._
+_Generated on Wed Oct 26 2016 12:47:34 UTC by soapcpp2 v2.8.36 for GameWebService.h._
 _The gSOAP XML Web services tools are Copyright (C) Robert van Engelen, Genivia Inc. All Rights Reserved._

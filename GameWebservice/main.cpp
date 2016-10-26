@@ -36,18 +36,19 @@ int gQueTailSktIdx = 0;
 //主循环线程句柄
 THREAD_TYPE gServiceLoop = 0;
 
+//线程同步
 MUTEX_TYPE gQueMutex;
 COND_TYPE gQueCond;
 
+//主soap
+struct soap gMainSoap;
 //===================
 
 void InitGlobeArg();
 int EnqueueSocket(SOAP_SOCKET);
 SOAP_SOCKET DequeueSocket();
 void* ServiceLoopThread(void*);
-void ServiceLoopThreadExit();
 void* ProcessQueThread(void*);
-void ProcessQueThreadExit();
 int CheckAuthorization(struct soap*);
 
 int http_get(struct soap* soap);
@@ -56,13 +57,35 @@ int http_get(struct soap* soap);
 
 int main(int argc, char* argv[])
 {
+	string operation;
 	cout << "GameWebservice Launching..." << endl;
 	
-	//服务主循环
-	THREAD_CREATE(&gServiceLoop, (void(*)(void*))ServiceLoopThread, NULL);
+	while (true)
+	{
+		cin.clear();
+		cin >> operation;
+		if (operation == "start")
+		{
+			//服务主循环
+			THREAD_CREATE(&gServiceLoop, (void(*)(void*))ServiceLoopThread, NULL);
+		}
+		else if(operation == "stop")
+		{
+			soap_done(&gMainSoap);
+		}
+		else if (operation == "quit")
+		{
+			soap_done(&gMainSoap);
+			break;
+		}
+
+		Sleep(1);
+	}
 
 	//等待主循环结束
 	THREAD_JOIN(gServiceLoop);
+
+	fprintf(stderr, "GameWebservice quit.\n");
 	return 0;
 }
 
@@ -94,27 +117,26 @@ void InitGlobeArg()
 //服务主循环
 void* ServiceLoopThread(void*)
 {
-	struct soap soap;
 	SOAP_SOCKET m, s;
 	int i;
 
-	cout << "ServiceLoop Launching..." << endl;
+	fprintf(stderr, "ServiceLoopThread %d Launching...\n", THREAD_ID);
 	InitGlobeArg();
 
 	//初始化
-	soap_init(&soap);
+	soap_init(&gMainSoap);
 
 	//设置账号密码
-	soap.userid = AUTH_USERID;
-	soap.passwd = AUTH_PWD;
+	gMainSoap.userid = AUTH_USERID;
+	gMainSoap.passwd = AUTH_PWD;
 
 	//添加回调
-	soap.fget = http_get;
+	gMainSoap.fget = http_get;
 
 	do
 	{
 		//绑定端口
-		m = soap_bind(&soap, NULL, gPort, BACKLOG);
+		m = soap_bind(&gMainSoap, NULL, gPort, BACKLOG);
 		if (!soap_valid_socket(m))
 		{
 			break;
@@ -127,18 +149,19 @@ void* ServiceLoopThread(void*)
 		//创建处理线程
 		for (i = 0; i < MAX_THR; i++)
 		{
-			gSoapthr[i] = soap_copy(&soap);//拷贝soap
+			gSoapthr[i] = soap_copy(&gMainSoap);//拷贝soap
 			THREAD_CREATE(&gThrIds[i], (void(*)(void*))ProcessQueThread, (void*)gSoapthr[i]);//创建线程
 		}
 
+		//main loop
 		for (;;)
 		{
-			s = soap_accept(&soap);
+			s = soap_accept(&gMainSoap);
 			if (!soap_valid_socket(s))
 			{
-				if (soap.errnum)
+				if (gMainSoap.errnum)
 				{
-					soap_print_fault(&soap, stderr);
+					soap_print_fault(&gMainSoap, stderr);
 					continue;//重试
 				}
 				else
@@ -148,7 +171,7 @@ void* ServiceLoopThread(void*)
 				}
 			}
 
-			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n", i, s, (soap.ip >> 24) & 0xFF, (soap.ip >> 16) & 0xFF, (soap.ip >> 8) & 0xFF, soap.ip & 0xFF);
+			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n", (DWORD)gThrIds[i], s, (gMainSoap.ip >> 24) & 0xFF, (gMainSoap.ip >> 16) & 0xFF, (gMainSoap.ip >> 8) & 0xFF, gMainSoap.ip & 0xFF);
 
 			while (EnqueueSocket(s) == SOAP_EOM)
 			{
@@ -167,10 +190,7 @@ void* ServiceLoopThread(void*)
 
 		for (i = 0; i < MAX_THR; i++)
 		{
-			fprintf(stderr, "Waiting for thread %d to terminate...\n", i);
 			THREAD_JOIN(gThrIds[i]);
-			fprintf(stderr, "terminated\n");
-
 			soap_done(gSoapthr[i]);
 			free(gSoapthr[i]);
 		}
@@ -182,27 +202,19 @@ void* ServiceLoopThread(void*)
 	} while (false);
 
 
-	soap_destroy(&soap);
-	soap_end(&soap);
-	soap_done(&soap);
+	soap_destroy(&gMainSoap);
+	soap_end(&gMainSoap);
+	soap_done(&gMainSoap);
 
+	fprintf(stderr, "ServiceLoopThread %d Exit.\n", THREAD_ID);
 	THREAD_EXIT;
-	ServiceLoopThreadExit();
 	return NULL;
-}
-
-//服务主循环退出
-void ServiceLoopThreadExit()
-{//用于做一些退出处理
-	fprintf(stderr, "ServiceLoopThread Exit.\n");
-
-	DWORD thrId = THREAD_ID;
 }
 
 //消息队列出列线程
 void* ProcessQueThread(void* soap)
 {
-	fprintf(stderr, "ProcessQueThread Start.\n");
+	fprintf(stderr, "ProcessQueThread %d Start.\n", THREAD_ID);
 
 	struct soap* tsoap = (struct soap*)soap;
 	for (;;)
@@ -216,21 +228,11 @@ void* ProcessQueThread(void* soap)
 		soap_serve(tsoap);
 		soap_destroy(tsoap);
 		soap_end(tsoap);
-
-		fprintf(stderr, "served.\n");
 	}
 
+	fprintf(stderr, "ProcessQueThread %d Exit.\n", THREAD_ID);
 	THREAD_EXIT;
-	ProcessQueThreadExit();
 	return NULL;
-}
-
-//处理线程退出
-void ProcessQueThreadExit()
-{
-	fprintf(stderr, "ProcessQueThread Exit.\n");
-
-	DWORD thrId = THREAD_ID;
 }
 
 //加入队列
