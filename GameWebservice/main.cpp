@@ -2,6 +2,8 @@
 # include "soapH.h"
 # include "threads.h"
 # include "httpget.h"
+# include "httppost.h"
+# include "httpform.h"
 # include "GameWebservice.nsmap"
 using namespace std;
 
@@ -51,29 +53,31 @@ void* ServiceLoopThread(void*);
 void* ProcessQueThread(void*);
 int CheckAuthorization(struct soap*);
 
-int http_get(struct soap* soap);
+int HttpGetHandler(struct soap* soap);
+int HttpFormHandler(struct soap* soap);
+int HttpPostHandler(struct soap* soap);
 
 //===
 
 int main(int argc, char* argv[])
 {
-	string operation;
-	cout << "GameWebservice Launching..." << endl;
+	char operation[64];
+	fprintf(stderr, "GameWebservice Launching...\n", THREAD_ID);
 	
 	while (true)
 	{
-		cin.clear();
-		cin >> operation;
-		if (operation == "start")
+		scanf("%s", operation);
+		fflush(NULL);
+		if (0 == strcmp(operation, "start"))
 		{
 			//服务主循环
 			THREAD_CREATE(&gServiceLoop, (void(*)(void*))ServiceLoopThread, NULL);
 		}
-		else if(operation == "stop")
+		else if(0 == strcmp(operation, "stop"))
 		{
 			soap_done(&gMainSoap);
 		}
-		else if (operation == "quit")
+		else if (0 == strcmp(operation, "quit"))
 		{
 			soap_done(&gMainSoap);
 			break;
@@ -131,7 +135,9 @@ void* ServiceLoopThread(void*)
 	gMainSoap.passwd = AUTH_PWD;
 
 	//添加回调
-	gMainSoap.fget = http_get;
+	soap_register_plugin_arg(&gMainSoap, http_get, HttpGetHandler);
+	soap_register_plugin_arg(&gMainSoap, http_post, HttpPostHandler);
+	soap_register_plugin_arg(&gMainSoap, http_form, HttpFormHandler);
 
 	do
 	{
@@ -303,7 +309,7 @@ int CheckAuthorization(struct soap* soap)
 }
 
 //http rest
-int http_get(struct soap* soap)
+int HttpGetHandler(struct soap* soap)
 {
 	if (CheckAuthorization(soap))
 	{//认证失败
@@ -313,5 +319,27 @@ int http_get(struct soap* soap)
 	soap_response(soap, SOAP_HTML);
 	soap_send(soap, "<html>Hello world</html>");
 	soap_end_send(soap);
+	return SOAP_OK;
+}
+
+int HttpPostHandler(struct soap* soap)
+{
+	if (CheckAuthorization(soap))
+	{//认证失败
+		return 401;
+	}
+
+	return SOAP_OK;
+}
+
+int HttpFormHandler(struct soap* soap)
+{
+	if (CheckAuthorization(soap))
+	{//认证失败
+		return 401;
+	}
+
+
+
 	return SOAP_OK;
 }

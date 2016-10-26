@@ -154,7 +154,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="httpform.c" />
     <ClCompile Include="httpget.c" />
+    <ClCompile Include="httppost.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="soapC.cpp" />
     <ClCompile Include="soapServer.cpp" />
@@ -166,7 +168,9 @@
     <None Include="soapReadme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="httpform.h" />
     <ClInclude Include="httpget.h" />
+    <ClInclude Include="httppost.h" />
     <ClInclude Include="soapH.h" />
     <ClInclude Include="soapStub.h" />
     <ClInclude Include="stdsoap2.h" />
