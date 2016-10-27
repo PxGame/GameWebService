@@ -1,4 +1,3 @@
-
 #include "soapH.h"
 SOAP_NMAC struct Namespace namespaces[] = {
         {"SOAP-ENV", NULL, NULL, NULL},

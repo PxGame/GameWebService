@@ -1,27 +1,10 @@
-# include <iostream>
-# include "soapH.h"
-# include "threads.h"
-# include "httpget.h"
-# include "httppost.h"
-# include "httpform.h"
-# include "GameWebservice.nsmap"
-using namespace std;
+# include "pub.h"
+# include "Common.h"
+# include "ProcessHttpForm.h"
+# include "ProcessHttpGet.h"
+# include "ProcessHttpPost.h"
 
-//Rest don`t use this.
-int ns__test(struct soap* soap)
-{
-	return SOAP_NO_METHOD;
-}
-
-//====== configuration
-# define BACKLOG (100)
-# define MAX_THR (10)			//线程池大小
-# define MAX_QUEUE (1000)		//请求队列大小
-# define AUTH_USERID "admin"		//用户名
-# define AUTH_PWD "123456"		//密码
-
-//端口
-int gPort = 8080;
+# include "GameWebservice.nsmap"//该文件不要重复包含，会产生重复定义
 
 //====== Globe parameter
 
@@ -36,7 +19,7 @@ int gQueHeadSktIdx = 0;
 int gQueTailSktIdx = 0;
 
 //主循环线程句柄
-THREAD_TYPE gServiceLoop = 0;
+THREAD_TYPE gServiceLoopThr = 0;
 
 //线程同步
 MUTEX_TYPE gQueMutex;
@@ -51,18 +34,13 @@ int EnqueueSocket(SOAP_SOCKET);
 SOAP_SOCKET DequeueSocket();
 void* ServiceLoopThread(void*);
 void* ProcessQueThread(void*);
-int CheckAuthorization(struct soap*);
-
-int HttpGetHandler(struct soap* soap);
-int HttpFormHandler(struct soap* soap);
-int HttpPostHandler(struct soap* soap);
 
 //===
 
 int main(int argc, char* argv[])
 {
 	char operation[64];
-	fprintf(stderr, "GameWebservice Launching...\n", THREAD_ID);
+	fprintf(stderr, "GameWebservice %d Launching...\n", THREAD_ID);
 	
 	while (true)
 	{
@@ -71,7 +49,7 @@ int main(int argc, char* argv[])
 		if (0 == strcmp(operation, "start"))
 		{
 			//服务主循环
-			THREAD_CREATE(&gServiceLoop, (void(*)(void*))ServiceLoopThread, NULL);
+			THREAD_CREATE(&gServiceLoopThr, (void(*)(void*))ServiceLoopThread, NULL);
 		}
 		else if(0 == strcmp(operation, "stop"))
 		{
@@ -87,9 +65,9 @@ int main(int argc, char* argv[])
 	}
 
 	//等待主循环结束
-	THREAD_JOIN(gServiceLoop);
+	THREAD_JOIN(gServiceLoopThr);
 
-	fprintf(stderr, "GameWebservice quit.\n");
+	fprintf(stderr, "GameWebservice %d quit.\n", THREAD_ID);
 	return 0;
 }
 
@@ -115,13 +93,13 @@ void InitGlobeArg()
 	//线程队列尾
 	gQueTailSktIdx = 0;
 	//主循环线程句柄
-	gServiceLoop = 0;
+	gServiceLoopThr = 0;
 }
 
 //服务主循环
 void* ServiceLoopThread(void*)
 {
-	SOAP_SOCKET m, s;
+	SOAP_SOCKET sMainSocket, sTemp;
 	int i;
 
 	fprintf(stderr, "ServiceLoopThread %d Launching...\n", THREAD_ID);
@@ -142,8 +120,8 @@ void* ServiceLoopThread(void*)
 	do
 	{
 		//绑定端口
-		m = soap_bind(&gMainSoap, NULL, gPort, BACKLOG);
-		if (!soap_valid_socket(m))
+		sMainSocket = soap_bind(&gMainSoap, NULL, gPort, BACKLOG);
+		if (!soap_valid_socket(sMainSocket))
 		{
 			break;
 		}
@@ -162,8 +140,8 @@ void* ServiceLoopThread(void*)
 		//main loop
 		for (;;)
 		{
-			s = soap_accept(&gMainSoap);
-			if (!soap_valid_socket(s))
+			sTemp = soap_accept(&gMainSoap);
+			if (!soap_valid_socket(sTemp))
 			{
 				if (gMainSoap.errnum)
 				{
@@ -177,9 +155,9 @@ void* ServiceLoopThread(void*)
 				}
 			}
 
-			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n", (DWORD)gThrIds[i], s, (gMainSoap.ip >> 24) & 0xFF, (gMainSoap.ip >> 16) & 0xFF, (gMainSoap.ip >> 8) & 0xFF, gMainSoap.ip & 0xFF);
+			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n", (DWORD)gThrIds[i], sTemp, (gMainSoap.ip >> 24) & 0xFF, (gMainSoap.ip >> 16) & 0xFF, (gMainSoap.ip >> 8) & 0xFF, gMainSoap.ip & 0xFF);
 
-			while (EnqueueSocket(s) == SOAP_EOM)
+			while (EnqueueSocket(sTemp) == SOAP_EOM)
 			{
 				Sleep(1);
 			}
@@ -293,53 +271,8 @@ SOAP_SOCKET DequeueSocket()
 	return sock;
 }
 
-
-//认证用户
-int CheckAuthorization(struct soap* soap)
+//Rest don`t use this.
+int ns__test(struct soap* soap)
 {
-	if (!soap->userid || !soap->passwd ||
-		strcmp(soap->userid, AUTH_USERID) ||
-		strcmp(soap->passwd, AUTH_PWD))
-	{
-		//认证失败 401
-		return 401;
-	}
-
-	return 0;
-}
-
-//http rest
-int HttpGetHandler(struct soap* soap)
-{
-	if (CheckAuthorization(soap))
-	{//认证失败
-		return 401;
-	}
-
-	soap_response(soap, SOAP_HTML);
-	soap_send(soap, "<html>Hello world</html>");
-	soap_end_send(soap);
-	return SOAP_OK;
-}
-
-int HttpPostHandler(struct soap* soap)
-{
-	if (CheckAuthorization(soap))
-	{//认证失败
-		return 401;
-	}
-
-	return SOAP_OK;
-}
-
-int HttpFormHandler(struct soap* soap)
-{
-	if (CheckAuthorization(soap))
-	{//认证失败
-		return 401;
-	}
-
-
-
-	return SOAP_OK;
+	return SOAP_NO_METHOD;
 }

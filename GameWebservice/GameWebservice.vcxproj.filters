@@ -39,6 +39,21 @@
     <ClCompile Include="httpform.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="pub.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessHttpForm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessHttpGet.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessHttpPost.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Common.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="GameWebservice.nsmap" />
@@ -64,6 +79,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="httpform.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pub.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessHttpForm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessHttpGet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessHttpPost.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -154,10 +154,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Common.cpp" />
     <ClCompile Include="httpform.c" />
     <ClCompile Include="httpget.c" />
     <ClCompile Include="httppost.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ProcessHttpForm.cpp" />
+    <ClCompile Include="ProcessHttpGet.cpp" />
+    <ClCompile Include="ProcessHttpPost.cpp" />
+    <ClCompile Include="pub.cpp" />
     <ClCompile Include="soapC.cpp" />
     <ClCompile Include="soapServer.cpp" />
     <ClCompile Include="stdsoap2.cpp" />
@@ -168,9 +173,14 @@
     <None Include="soapReadme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common.h" />
     <ClInclude Include="httpform.h" />
     <ClInclude Include="httpget.h" />
     <ClInclude Include="httppost.h" />
+    <ClInclude Include="ProcessHttpForm.h" />
+    <ClInclude Include="ProcessHttpGet.h" />
+    <ClInclude Include="ProcessHttpPost.h" />
+    <ClInclude Include="pub.h" />
     <ClInclude Include="soapH.h" />
     <ClInclude Include="soapStub.h" />
     <ClInclude Include="stdsoap2.h" />
