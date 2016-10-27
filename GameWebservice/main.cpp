@@ -37,6 +37,12 @@ void* ProcessQueThread(void*);
 
 //===
 
+struct http_post_handlers ghttpPostHndlers[] =
+{ 
+	{ "*/*", HttpPostHandler },
+	{ NULL }
+};
+
 int main(int argc, char* argv[])
 {
 	char operation[64];
@@ -113,8 +119,8 @@ void* ServiceLoopThread(void*)
 	gMainSoap.passwd = AUTH_PWD;
 
 	//Ìí¼Ó»Øµ÷
+	soap_register_plugin_arg(&gMainSoap, http_post, ghttpPostHndlers);
 	soap_register_plugin_arg(&gMainSoap, http_get, HttpGetHandler);
-	soap_register_plugin_arg(&gMainSoap, http_post, HttpPostHandler);
 	soap_register_plugin_arg(&gMainSoap, http_form, HttpFormHandler);
 
 	do
