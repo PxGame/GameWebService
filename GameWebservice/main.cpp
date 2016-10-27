@@ -8,8 +8,8 @@
 
 //====== Globe parameter
 
-struct soap *gSoapthr[MAX_THR] = { NULL };
-THREAD_TYPE gThrIds[MAX_THR] = { NULL };
+struct soap *gSoapthr[MAX_THR] = { 0 };
+THREAD_TYPE gThrIds[MAX_THR] = { 0 };
 
 //Socket队列
 SOAP_SOCKET gQueSocket[MAX_QUEUE] = {0};
@@ -40,22 +40,22 @@ void* ProcessQueThread(void*);
 struct http_post_handlers ghttpPostHndlers[] =
 { 
 	{ "*/*", HttpPostHandler },
-	{ NULL }
+	{ 0 }
 };
 
 int main(int argc, char* argv[])
 {
 	char operation[64];
-	fprintf(stderr, "GameWebservice %d Launching...\n", THREAD_ID);
+	fprintf(stderr, "GameWebservice %ld Launching...\n", THREAD_ID);
 	
 	while (true)
 	{
 		scanf("%s", operation);
-		fflush(NULL);
+		fflush(0);
 		if (0 == strcmp(operation, "start"))
 		{
 			//服务主循环
-			THREAD_CREATE(&gServiceLoopThr, (void(*)(void*))ServiceLoopThread, NULL);
+			THREAD_CREATE(&gServiceLoopThr, FIXEDTHREADFUNC(ServiceLoopThread), 0);
 		}
 		else if(0 == strcmp(operation, "stop"))
 		{
@@ -67,13 +67,13 @@ int main(int argc, char* argv[])
 			break;
 		}
 
-		Sleep(1);
+		SLEEP(1);
 	}
 
 	//等待主循环结束
 	THREAD_JOIN(gServiceLoopThr);
 
-	fprintf(stderr, "GameWebservice %d quit.\n", THREAD_ID);
+	fprintf(stderr, "GameWebservice %ld quit.\n", THREAD_ID);
 	return 0;
 }
 
@@ -84,8 +84,8 @@ void InitGlobeArg()
 
 	for (i = 0; i < MAX_THR; i++)
 	{
-		gSoapthr[i] = NULL;
-		gThrIds[i] = NULL;
+		gSoapthr[i] = 0;
+		gThrIds[i] = 0;
 	}
 
 	//Socket队列
@@ -119,14 +119,14 @@ void* ServiceLoopThread(void*)
 	gMainSoap.passwd = AUTH_PWD;
 
 	//添加回调
-	soap_register_plugin_arg(&gMainSoap, http_post, ghttpPostHndlers);
-	soap_register_plugin_arg(&gMainSoap, http_get, HttpGetHandler);
-	soap_register_plugin_arg(&gMainSoap, http_form, HttpFormHandler);
+	soap_register_plugin_arg(&gMainSoap, http_post, (void*)ghttpPostHndlers);
+	soap_register_plugin_arg(&gMainSoap, http_get, (void*)HttpGetHandler);
+	soap_register_plugin_arg(&gMainSoap, http_form, (void*)HttpFormHandler);
 
 	do
 	{
 		//绑定端口
-		sMainSocket = soap_bind(&gMainSoap, NULL, gPort, BACKLOG);
+		sMainSocket = soap_bind(&gMainSoap, 0, gPort, BACKLOG);
 		if (!soap_valid_socket(sMainSocket))
 		{
 			break;
@@ -140,7 +140,7 @@ void* ServiceLoopThread(void*)
 		for (i = 0; i < MAX_THR; i++)
 		{
 			gSoapthr[i] = soap_copy(&gMainSoap);//拷贝soap
-			THREAD_CREATE(&gThrIds[i], (void(*)(void*))ProcessQueThread, (void*)gSoapthr[i]);//创建线程
+			THREAD_CREATE(&gThrIds[i], FIXEDTHREADFUNC(ProcessQueThread), (void*)gSoapthr[i]);//创建线程
 		}
 
 		//main loop
@@ -161,11 +161,12 @@ void* ServiceLoopThread(void*)
 				}
 			}
 
-			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n", (DWORD)gThrIds[i], sTemp, (gMainSoap.ip >> 24) & 0xFF, (gMainSoap.ip >> 16) & 0xFF, (gMainSoap.ip >> 8) & 0xFF, gMainSoap.ip & 0xFF);
+			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n", 
+				(int)gThrIds[i], (int)sTemp, (int)(gMainSoap.ip >> 24) & 0xFF, (int)(gMainSoap.ip >> 16) & 0xFF, (int)(gMainSoap.ip >> 8) & 0xFF, (int)gMainSoap.ip & 0xFF);
 
 			while (EnqueueSocket(sTemp) == SOAP_EOM)
 			{
-				Sleep(1);
+				SLEEP(1);
 			}
 		}
 
@@ -174,7 +175,7 @@ void* ServiceLoopThread(void*)
 		{
 			while (EnqueueSocket(SOAP_INVALID_SOCKET) == SOAP_EOM)
 			{
-				Sleep(1);
+				SLEEP(1);
 			}
 		}
 
@@ -198,7 +199,7 @@ void* ServiceLoopThread(void*)
 
 	fprintf(stderr, "ServiceLoopThread %d Exit.\n", THREAD_ID);
 	THREAD_EXIT;
-	return NULL;
+	return 0;
 }
 
 //消息队列出列线程
@@ -222,7 +223,7 @@ void* ProcessQueThread(void* soap)
 
 	fprintf(stderr, "ProcessQueThread %d Exit.\n", THREAD_ID);
 	THREAD_EXIT;
-	return NULL;
+	return 0;
 }
 
 //加入队列
