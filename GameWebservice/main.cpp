@@ -37,6 +37,7 @@ void* ProcessQueThread(void*);
 
 //===
 
+//Post根据mime分配回调
 struct http_post_handlers ghttpPostHndlers[] =
 { 
 	{ "*/*", HttpPostHandler },
@@ -45,6 +46,38 @@ struct http_post_handlers ghttpPostHndlers[] =
 
 int main(int argc, char* argv[])
 {
+	/*sql::mysql::MySQL_Driver *driver = 0;
+	sql::Connection *conn = 0;
+
+	try
+	{
+		driver = sql::mysql::get_mysql_driver_instance();
+		conn = driver->connect("tcp://192.168.1.75:3306/game_db", "admin", "123456");
+		cout << "连接成功！" << endl;
+	}
+	catch (...)
+	{
+		cout << "连接失败！" << endl;
+	}
+
+	sql::Statement* stat = conn->createStatement();
+
+	try
+	{
+		if (stat->execute("call createuser('a','1','1234/12/12/1/2/3');"))
+		{
+			cout << "ok" << endl;
+		}
+		else
+		{
+			cout << "no" << endl;
+		}
+	}
+	catch (const std::exception& e)
+	{
+		cout << "error:" << e.what() << endl;
+	}*/
+	
 	char operation[64];
 	fprintf(stderr, "GameWebservice %ld Launching...\n", THREAD_ID);
 	
