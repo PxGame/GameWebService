@@ -19,7 +19,13 @@
 # define AUTH_PWD "123456"		//ÃÜÂë
 //base 64 [AUTH_USERID:AUTH_PWD] > Authorization:Basic YWRtaW46MTIzNDU2
 
+//server
 extern int gPort;
+
+//db
+extern char* gDbHostName;
+extern char* gDbUserName;
+extern char* gDbPassword;
 
 int CheckAuthorization(struct soap*);
 

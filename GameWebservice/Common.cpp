@@ -1,8 +1,15 @@
 # include "Common.h"
 # include "pub.h"
 
+//server
+
 //端口
 int gPort = 8080;
+
+//db
+char* gDbHostName = "tcp://192.168.2.115:3306/game_db";
+char* gDbUserName = "admin";
+char* gDbPassword = "123456";
 
 //认证用户
 int CheckAuthorization(struct soap* soap)

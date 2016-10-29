@@ -3,7 +3,7 @@
 # include "ProcessHttpForm.h"
 # include "ProcessHttpGet.h"
 # include "ProcessHttpPost.h"
-
+# include "DBManager.h"
 # include "GameWebservice.nsmap"//该文件不要重复包含，会产生重复定义
 
 //====== Globe parameter
@@ -12,7 +12,7 @@ struct soap *gSoapthr[MAX_THR] = { 0 };
 THREAD_TYPE gThrIds[MAX_THR] = { 0 };
 
 //Socket队列
-SOAP_SOCKET gQueSocket[MAX_QUEUE] = {0};
+SOAP_SOCKET gQueSocket[MAX_QUEUE] = { 0 };
 //线程队列头
 int gQueHeadSktIdx = 0;
 //线程队列尾
@@ -27,6 +27,11 @@ COND_TYPE gQueCond;
 
 //主soap
 struct soap gMainSoap;
+
+//DBManager
+DBManager* gDbManager = 0;
+
+
 //===================
 
 void InitGlobeArg();
@@ -39,48 +44,18 @@ void* ProcessQueThread(void*);
 
 //Post根据mime分配回调
 struct http_post_handlers ghttpPostHndlers[] =
-{ 
+{
 	{ "*/*", HttpPostHandler },
 	{ 0 }
 };
 
 int main(int argc, char* argv[])
 {
-	/*sql::mysql::MySQL_Driver *driver = 0;
-	sql::Connection *conn = 0;
+	gDbManager = new DBManager(gDbHostName, gDbUserName, gDbPassword);
 
-	try
-	{
-		driver = sql::mysql::get_mysql_driver_instance();
-		conn = driver->connect("tcp://192.168.1.75:3306/game_db", "admin", "123456");
-		cout << "连接成功！" << endl;
-	}
-	catch (...)
-	{
-		cout << "连接失败！" << endl;
-	}
-
-	sql::Statement* stat = conn->createStatement();
-
-	try
-	{
-		if (stat->execute("call createuser('a','1','1234/12/12/1/2/3');"))
-		{
-			cout << "ok" << endl;
-		}
-		else
-		{
-			cout << "no" << endl;
-		}
-	}
-	catch (const std::exception& e)
-	{
-		cout << "error:" << e.what() << endl;
-	}*/
-	
 	char operation[64];
-	fprintf(stderr, "GameWebservice %ld Launching...\n", THREAD_ID);
-	
+	fprintf(stderr, "GameWebservice Launching...\n");
+
 	while (true)
 	{
 		scanf("%s", operation);
@@ -90,7 +65,7 @@ int main(int argc, char* argv[])
 			//服务主循环
 			THREAD_CREATE(&gServiceLoopThr, FIXEDTHREADFUNC(ServiceLoopThread), 0);
 		}
-		else if(0 == strcmp(operation, "stop"))
+		else if (0 == strcmp(operation, "stop"))
 		{
 			soap_done(&gMainSoap);
 		}
@@ -105,8 +80,9 @@ int main(int argc, char* argv[])
 
 	//等待主循环结束
 	THREAD_JOIN(gServiceLoopThr);
+	delete gDbManager;
+	fprintf(stderr, "GameWebservice quit.\n");
 
-	fprintf(stderr, "GameWebservice %ld quit.\n", THREAD_ID);
 	return 0;
 }
 
@@ -141,7 +117,7 @@ void* ServiceLoopThread(void*)
 	SOAP_SOCKET sMainSocket, sTemp;
 	int i;
 
-	fprintf(stderr, "ServiceLoopThread %d Launching...\n", THREAD_ID);
+	fprintf(stderr, "ServiceLoopThread Launching...\n");
 	InitGlobeArg();
 
 	//初始化
@@ -194,7 +170,7 @@ void* ServiceLoopThread(void*)
 				}
 			}
 
-			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n", 
+			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n",
 				(int)gThrIds[i], (int)sTemp, (int)(gMainSoap.ip >> 24) & 0xFF, (int)(gMainSoap.ip >> 16) & 0xFF, (int)(gMainSoap.ip >> 8) & 0xFF, (int)gMainSoap.ip & 0xFF);
 
 			while (EnqueueSocket(sTemp) == SOAP_EOM)
@@ -230,7 +206,7 @@ void* ServiceLoopThread(void*)
 	soap_end(&gMainSoap);
 	soap_done(&gMainSoap);
 
-	fprintf(stderr, "ServiceLoopThread %d Exit.\n", THREAD_ID);
+	fprintf(stderr, "ServiceLoopThread Exit.\n");
 	THREAD_EXIT;
 	return 0;
 }
@@ -238,9 +214,52 @@ void* ServiceLoopThread(void*)
 //消息队列出列线程
 void* ProcessQueThread(void* soap)
 {
-	fprintf(stderr, "ProcessQueThread %d Start.\n", THREAD_ID);
-
 	struct soap* tsoap = (struct soap*)soap;
+	fprintf(stderr, "ProcessQueThread Start.\n");
+
+	/*
+	//=================
+	char strSql_1[255] = "";
+	char strSql_2[255] = "";
+	srand(THREAD_ID);
+	int num = rand() % 10000;
+	sprintf(strSql_1, "call user_regist('name_%d','');", num);
+	sprintf(strSql_2, "call user_login_update('name_%d','asd','zxc');", num);
+
+	std::auto_ptr< sql::Connection >  con;
+	std::auto_ptr< sql::PreparedStatement >  pstmt;
+	std::auto_ptr< sql::ResultSet > res;
+
+	con.reset(gDbManager->GetNewConnection());
+	pstmt.reset(con->prepareStatement(strSql_1));
+	res.reset(pstmt->executeQuery());
+	for (;;)
+	{
+		while (res->next()) {
+		}
+		if (pstmt->getMoreResults())
+		{
+			res.reset(pstmt->getResultSet());
+			continue;
+		}
+		break;
+	}
+
+	pstmt.reset(con->prepareStatement(strSql_2));
+	res.reset(pstmt->executeQuery());
+	for (;;)
+	{
+		while (res->next()) {
+		}
+		if (pstmt->getMoreResults())
+		{
+			res.reset(pstmt->getResultSet());
+			continue;
+		}
+		break;
+	}
+	//===================
+	*/
 	for (;;)
 	{
 		tsoap->socket = DequeueSocket();
@@ -254,7 +273,7 @@ void* ProcessQueThread(void* soap)
 		soap_end(tsoap);
 	}
 
-	fprintf(stderr, "ProcessQueThread %d Exit.\n", THREAD_ID);
+	fprintf(stderr, "ProcessQueThread Exit.\n");
 	THREAD_EXIT;
 	return 0;
 }
@@ -264,7 +283,7 @@ int EnqueueSocket(SOAP_SOCKET sock)
 {
 	int status = SOAP_OK;
 	int next;
-	
+
 	MUTEX_LOCK(gQueMutex);
 
 	next = gQueTailSktIdx + 1;
