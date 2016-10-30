@@ -88,19 +88,32 @@ UNLOCK TABLES;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`admin`@`%` PROCEDURE `user_login_update`(in n varchar(255), in i varchar(255), in t varchar(255))
-BEGIN
-	declare _cnt int default 0;
+begin
+    declare _cnt int default 0;
     declare _time datetime default now();
-    select logincount into _cnt from user where name = n;
-    set _cnt = _cnt + 1;
+	declare _error int default false;
+	declare continue handler for sqlexception set _error = true;#非声明语句必须放在所有非声明语句的后面，否者会报错。
     
-    update user set lastlogintime = _time,lastloginip = i,logincount = _cnt where name = n;
-    if t != '' then
-		update user set logintoken = t where name = n;
-    end if;    
+    start transaction;
     
-    insert into loginlog(name,ip,time) value(n,i,_time);
-END ;;
+		select logincount into _cnt from user where name = n;
+		set _cnt = _cnt + 1;
+
+		update user set lastlogintime = _time,lastloginip = i,logincount = _cnt where name = n;
+		if t != '' then
+			update user set logintoken = t where name = n;
+		end if;
+
+		insert into loginlog(name,ip,time) value(n,i,_time);
+    
+    if _error = false then
+		commit;
+	else
+		rollback;
+		select _error;
+	end if;
+    
+end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -118,7 +131,19 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`admin`@`%` PROCEDURE `user_query`(in n varchar(255))
 BEGIN
-    select * from user where name = n;
+	declare _error bool default false;
+	declare continue handler for sqlexception set _error = true;#非声明语句必须放在所有非声明语句的后面，否者会报错。
+    
+    start transaction;
+    
+		select * from user where name = n;
+    
+    if _error = false then
+		commit;
+	else
+		rollback;
+        select _error;
+	end if;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -139,14 +164,26 @@ CREATE DEFINER=`admin`@`%` PROCEDURE `user_regist`(in n varchar(255), in p varch
 BEGIN
 	declare _ret bool default false;
 	declare _cnt int default 0;
-	select count(*) into _cnt from user where user.name = n;
-    if (_cnt = 0) then
-		set _ret = true;
-        insert into user(name,pwd,createtime) value(n,p,now());
-    else
-		set _ret = false;
-    end if;
-    select _ret;
+	declare _error bool default false;
+	declare continue handler for sqlexception set _error = true;#非声明语句必须放在所有非声明语句的后面，否者会报错。
+    
+    start transaction;
+    
+		select count(*) into _cnt from user where user.name = n;
+		if (_cnt = 0) then
+			set _ret = true;
+			insert into user(name,pwd,createtime) value(n,p,now());
+		else
+			set _ret = false;
+		end if;
+		select _ret;
+    
+	if _error = false then
+		commit;
+	else
+		rollback;
+        select _error;
+	end if;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -163,4 +200,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-10-29 15:48:47
+-- Dump completed on 2016-10-31  0:23:04
