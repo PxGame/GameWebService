@@ -2,9 +2,9 @@ CREATE DATABASE  IF NOT EXISTS `game_db` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `game_db`;
 -- MySQL dump 10.13  Distrib 5.7.12, for Win64 (x86_64)
 --
--- Host: 192.168.2.115    Database: game_db
+-- Host: 192.168.1.58    Database: game_db
 -- ------------------------------------------------------
--- Server version	5.7.16-0ubuntu0.16.10.1
+-- Server version	5.6.28-0ubuntu0.15.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -18,28 +18,29 @@ USE `game_db`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `loginlog`
+-- Table structure for table `log`
 --
 
-DROP TABLE IF EXISTS `loginlog`;
+DROP TABLE IF EXISTS `log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `loginlog` (
+CREATE TABLE `log` (
   `index` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增长序号',
   `name` varchar(255) DEFAULT '' COMMENT '用户名',
   `ip` varchar(255) DEFAULT '' COMMENT 'ip地址',
   `time` datetime DEFAULT NULL COMMENT '登录时间',
+  `status` varchar(255) DEFAULT '',
   PRIMARY KEY (`index`)
-) ENGINE=InnoDB AUTO_INCREMENT=121 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `loginlog`
+-- Dumping data for table `log`
 --
 
-LOCK TABLES `loginlog` WRITE;
-/*!40000 ALTER TABLE `loginlog` DISABLE KEYS */;
-/*!40000 ALTER TABLE `loginlog` ENABLE KEYS */;
+LOCK TABLES `log` WRITE;
+/*!40000 ALTER TABLE `log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `log` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -50,7 +51,7 @@ DROP TABLE IF EXISTS `user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user` (
-  `name` varchar(255) NOT NULL COMMENT '用户名',
+  `name` varchar(255) NOT NULL DEFAULT '' COMMENT '用户名',
   `pwd` varchar(255) DEFAULT NULL COMMENT '用户密码',
   `createtime` datetime DEFAULT NULL COMMENT '创建时间',
   `lastlogintime` datetime DEFAULT NULL COMMENT '最后依次登录时间',
@@ -85,7 +86,7 @@ UNLOCK TABLES;
 /*!50003 SET character_set_results = utf8 */ ;
 /*!50003 SET collation_connection  = utf8_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`admin`@`%` PROCEDURE `user_login_update`(in n varchar(255), in i varchar(255), in t varchar(255))
 begin
@@ -104,7 +105,7 @@ begin
 			update user set logintoken = t where name = n;
 		end if;
 
-		insert into loginlog(name,ip,time) value(n,i,_time);
+		insert into log(name,ip,time, status) value(n,i,_time,'login');
     
     if _error = false then
 		commit;
@@ -112,7 +113,6 @@ begin
 		rollback;
 		select _error;
 	end if;
-    
 end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -127,7 +127,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8 */ ;
 /*!50003 SET collation_connection  = utf8_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`admin`@`%` PROCEDURE `user_query`(in n varchar(255))
 BEGIN
@@ -158,12 +158,13 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8 */ ;
 /*!50003 SET collation_connection  = utf8_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`admin`@`%` PROCEDURE `user_regist`(in n varchar(255), in p varchar(255))
+CREATE DEFINER=`admin`@`%` PROCEDURE `user_regist`(in n varchar(255), in p varchar(255), in i varchar(255))
 BEGIN
 	declare _ret bool default false;
 	declare _cnt int default 0;
+    declare _time datetime default now();
 	declare _error bool default false;
 	declare continue handler for sqlexception set _error = true;#非声明语句必须放在所有非声明语句的后面，否者会报错。
     
@@ -172,14 +173,15 @@ BEGIN
 		select count(*) into _cnt from user where user.name = n;
 		if (_cnt = 0) then
 			set _ret = true;
-			insert into user(name,pwd,createtime) value(n,p,now());
+			insert into user(name,pwd,createtime) value(n,p,_time);
+			insert into log(name,ip,time, status) value(n,i,_time,'regist');
 		else
 			set _ret = false;
 		end if;
-		select _ret;
-    
+        
 	if _error = false then
 		commit;
+		select _ret;
 	else
 		rollback;
         select _error;
@@ -200,4 +202,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-10-31  0:23:04
+-- Dump completed on 2016-10-31 18:13:59

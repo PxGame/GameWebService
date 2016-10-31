@@ -49,7 +49,40 @@ struct http_post_handlers ghttpPostHndlers[] =
 	{ 0 }
 };
 
-int main(int argc, char* argv[])
+int main()
+{
+	char* name = "qqq";
+	gDbManager = new DBManager(gDbHostName, gDbUserName, gDbPassword);
+	auto_ptr<Connection> conn(gDbManager->GetNewConnection());
+	if (gDbManager->RegistUser(conn.get(), name, "123456","123"))
+	{
+		printf("ok");
+	}
+	else
+	{
+		printf("failed");
+	}
+	if (gDbManager->LoginUpdate(conn.get(), name, "abc", "qqq"))
+	{
+		printf("ok");
+	}
+	else
+	{
+		printf("failed");
+	}
+	USERINFO userinfo;
+	if (gDbManager->QueryUserInfo(conn.get(), name,userinfo))
+	{
+		printf("ok");
+	}
+	else
+	{
+		printf("failed");
+	}
+	return 0;
+}
+
+int main1(int argc, char* argv[])
 {
 	gDbManager = new DBManager(gDbHostName, gDbUserName, gDbPassword);
 

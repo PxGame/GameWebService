@@ -19,7 +19,7 @@ begin
 			update user set logintoken = t where name = n;
 		end if;
 
-		insert into loginlog(name,ip,time) value(n,i,_time);
+		insert into log(name,ip,time, status) value(n,i,_time,'login');
     
     if _error = false then
 		commit;
@@ -27,7 +27,6 @@ begin
 		rollback;
 		select _error;
 	end if;
-    
 end$$
 
 #====================================================================
@@ -55,10 +54,11 @@ END$$
 
 drop procedure if exists user_regist $$ 
 
-create procedure user_regist(in n varchar(255), in p varchar(255))
+create procedure user_regist(in n varchar(255), in p varchar(255), in i varchar(255))
 BEGIN
 	declare _ret bool default false;
 	declare _cnt int default 0;
+    declare _time datetime default now();
 	declare _error bool default false;
 	declare continue handler for sqlexception set _error = true;#非声明语句必须放在所有非声明语句的后面，否者会报错。
     
@@ -67,14 +67,15 @@ BEGIN
 		select count(*) into _cnt from user where user.name = n;
 		if (_cnt = 0) then
 			set _ret = true;
-			insert into user(name,pwd,createtime) value(n,p,now());
+			insert into user(name,pwd,createtime) value(n,p,_time);
+			insert into log(name,ip,time, status) value(n,i,_time,'regist');
 		else
 			set _ret = false;
 		end if;
-		select _ret;
-    
+        
 	if _error = false then
 		commit;
+		select _ret;
 	else
 		rollback;
         select _error;
