@@ -8,28 +8,28 @@
 
 //====== Globe parameter
 
-struct soap *gSoapthr[MAX_THR] = { 0 };
-THREAD_TYPE gThrIds[MAX_THR] = { 0 };
+static struct soap **gSoapthr;
+static THREAD_TYPE *gThrIds;
 
 //Socket队列
-SOAP_SOCKET gQueSocket[MAX_QUEUE] = { 0 };
+static SOAP_SOCKET *gQueSocket;
 //线程队列头
-int gQueHeadSktIdx = 0;
+static int gQueHeadSktIdx = 0;
 //线程队列尾
-int gQueTailSktIdx = 0;
+static int gQueTailSktIdx = 0;
 
 //主循环线程句柄
-THREAD_TYPE gServiceLoopThr = 0;
+static THREAD_TYPE gServiceLoopThr = 0;
 
 //线程同步
-MUTEX_TYPE gQueMutex;
-COND_TYPE gQueCond;
+static MUTEX_TYPE gQueMutex;
+static COND_TYPE gQueCond;
 
 //主soap
-struct soap gMainSoap;
+static struct soap gMainSoap;
 
 //DBManager
-DBManager* gDbManager = 0;
+static DBManager* gDbManager = 0;
 
 
 //===================
@@ -43,46 +43,46 @@ void* ProcessQueThread(void*);
 //===
 
 //Post根据mime分配回调
-struct http_post_handlers ghttpPostHndlers[] =
+static struct http_post_handlers ghttpPostHndlers[] =
 {
 	{ "*/*", HttpPostHandler },
 	{ 0 }
 };
 
-int main()
-{
-	char* name = "qqq";
-	gDbManager = new DBManager(gDbHostName, gDbUserName, gDbPassword);
-	auto_ptr<Connection> conn(gDbManager->GetNewConnection());
-	if (gDbManager->RegistUser(conn.get(), name, "123456","123"))
-	{
-		printf("ok");
-	}
-	else
-	{
-		printf("failed");
-	}
-	if (gDbManager->LoginUpdate(conn.get(), name, "abc", "qqq"))
-	{
-		printf("ok");
-	}
-	else
-	{
-		printf("failed");
-	}
-	USERINFO userinfo;
-	if (gDbManager->QueryUserInfo(conn.get(), name,userinfo))
-	{
-		printf("ok");
-	}
-	else
-	{
-		printf("failed");
-	}
-	return 0;
-}
+//int main1()
+//{
+//	char* name = "xxxxxxx";
+//	gDbManager = new DBManager(gDbHostName, gDbUserName, gDbPassword);
+//	auto_ptr<Connection> conn(gDbManager->GetNewConnection());
+//	if (gDbManager->RegistUser(conn.get(), name, "123456","123"))
+//	{
+//		printf("ok");
+//	}
+//	else
+//	{
+//		printf("failed");
+//	}
+//	if (gDbManager->LoginUpdate(conn.get(), name, "abc", "qqq"))
+//	{
+//		printf("ok");
+//	}
+//	else
+//	{
+//		printf("failed");
+//	}
+//	USERINFO userinfo;
+//	if (gDbManager->QueryUserInfo(conn.get(), name,userinfo))
+//	{
+//		printf("ok");
+//	}
+//	else
+//	{
+//		printf("failed");
+//	}
+//	return 0;
+//}
 
-int main1(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 	gDbManager = new DBManager(gDbHostName, gDbUserName, gDbPassword);
 
@@ -124,17 +124,33 @@ void InitGlobeArg()
 {
 	int i = 0;
 
-	for (i = 0; i < MAX_THR; i++)
+	if (gSoapthr != 0)
+	{
+		delete[] gSoapthr;
+	}
+	gSoapthr = new struct soap*[gMaxThr];
+	if (gThrIds != 0)
+	{
+		delete[] gThrIds;
+	}
+	gThrIds = new THREAD_TYPE[gMaxThr];
+	if (gQueSocket != 0)
+	{
+		delete[] gQueSocket;
+	}
+	gQueSocket = new SOAP_SOCKET[gMaxQueue];
+
+	for (i = 0; i < gMaxThr; i++)
 	{
 		gSoapthr[i] = 0;
 		gThrIds[i] = 0;
 	}
-
 	//Socket队列
-	for (i = 0; i < MAX_QUEUE; i++)
+	for (i = 0; i < gMaxQueue; i++)
 	{
 		gQueSocket[i] = 0;
 	}
+
 
 	//线程队列头
 	gQueHeadSktIdx = 0;
@@ -157,8 +173,8 @@ void* ServiceLoopThread(void*)
 	soap_init(&gMainSoap);
 
 	//设置账号密码
-	gMainSoap.userid = AUTH_USERID;
-	gMainSoap.passwd = AUTH_PWD;
+	gMainSoap.userid = gAuthUserId;
+	gMainSoap.passwd = gAuthPwd;
 
 	//添加回调
 	soap_register_plugin_arg(&gMainSoap, http_post, (void*)ghttpPostHndlers);
@@ -168,7 +184,7 @@ void* ServiceLoopThread(void*)
 	do
 	{
 		//绑定端口
-		sMainSocket = soap_bind(&gMainSoap, 0, gPort, BACKLOG);
+		sMainSocket = soap_bind(&gMainSoap, 0, gPort, gBackLog);
 		if (!soap_valid_socket(sMainSocket))
 		{
 			break;
@@ -179,7 +195,7 @@ void* ServiceLoopThread(void*)
 		COND_SETUP(gQueCond);
 
 		//创建处理线程
-		for (i = 0; i < MAX_THR; i++)
+		for (i = 0; i < gMaxThr; i++)
 		{
 			gSoapthr[i] = soap_copy(&gMainSoap);//拷贝soap
 			THREAD_CREATE(&gThrIds[i], FIXEDTHREADFUNC(ProcessQueThread), (void*)gSoapthr[i]);//创建线程
@@ -203,8 +219,8 @@ void* ServiceLoopThread(void*)
 				}
 			}
 
-			fprintf(stderr, "Thread %d accepts socket %d connection from IP %d.%d.%d.%d\n",
-				(int)gThrIds[i], (int)sTemp, (int)(gMainSoap.ip >> 24) & 0xFF, (int)(gMainSoap.ip >> 16) & 0xFF, (int)(gMainSoap.ip >> 8) & 0xFF, (int)gMainSoap.ip & 0xFF);
+			fprintf(stderr, "Thread %lu accepts socket %lu connection from IP %s\n",
+				(unsigned long)gThrIds[i], (unsigned long)sTemp, TranslateIpToString(gMainSoap.ip).c_str());
 
 			while (EnqueueSocket(sTemp) == SOAP_EOM)
 			{
@@ -213,7 +229,7 @@ void* ServiceLoopThread(void*)
 		}
 
 		//退出所有线程
-		for (i = 0; i < MAX_THR; i++)
+		for (i = 0; i < gMaxThr; i++)
 		{
 			while (EnqueueSocket(SOAP_INVALID_SOCKET) == SOAP_EOM)
 			{
@@ -221,7 +237,7 @@ void* ServiceLoopThread(void*)
 			}
 		}
 
-		for (i = 0; i < MAX_THR; i++)
+		for (i = 0; i < gMaxThr; i++)
 		{
 			THREAD_JOIN(gThrIds[i]);
 			soap_done(gSoapthr[i]);
@@ -248,51 +264,9 @@ void* ServiceLoopThread(void*)
 void* ProcessQueThread(void* soap)
 {
 	struct soap* tsoap = (struct soap*)soap;
-	fprintf(stderr, "ProcessQueThread Start.\n");
+	Connection* conn = gDbManager->GetNewConnection();
+	fprintf(stderr, "ProcessQueThread Start. DB:%s\n", conn != 0 ? "true" : "false");
 
-	/*
-	//=================
-	char strSql_1[255] = "";
-	char strSql_2[255] = "";
-	srand(THREAD_ID);
-	int num = rand() % 10000;
-	sprintf(strSql_1, "call user_regist('name_%d','');", num);
-	sprintf(strSql_2, "call user_login_update('name_%d','asd','zxc');", num);
-
-	std::auto_ptr< sql::Connection >  con;
-	std::auto_ptr< sql::PreparedStatement >  pstmt;
-	std::auto_ptr< sql::ResultSet > res;
-
-	con.reset(gDbManager->GetNewConnection());
-	pstmt.reset(con->prepareStatement(strSql_1));
-	res.reset(pstmt->executeQuery());
-	for (;;)
-	{
-		while (res->next()) {
-		}
-		if (pstmt->getMoreResults())
-		{
-			res.reset(pstmt->getResultSet());
-			continue;
-		}
-		break;
-	}
-
-	pstmt.reset(con->prepareStatement(strSql_2));
-	res.reset(pstmt->executeQuery());
-	for (;;)
-	{
-		while (res->next()) {
-		}
-		if (pstmt->getMoreResults())
-		{
-			res.reset(pstmt->getResultSet());
-			continue;
-		}
-		break;
-	}
-	//===================
-	*/
 	for (;;)
 	{
 		tsoap->socket = DequeueSocket();
@@ -300,12 +274,12 @@ void* ProcessQueThread(void* soap)
 		{
 			break;
 		}
-
+		tsoap->
 		soap_serve(tsoap);
 		soap_destroy(tsoap);
 		soap_end(tsoap);
 	}
-
+	delete conn;
 	fprintf(stderr, "ProcessQueThread Exit.\n");
 	THREAD_EXIT;
 	return 0;
@@ -320,7 +294,7 @@ int EnqueueSocket(SOAP_SOCKET sock)
 	MUTEX_LOCK(gQueMutex);
 
 	next = gQueTailSktIdx + 1;
-	if (next >= MAX_QUEUE)
+	if (next >= gMaxQueue)
 	{
 		next = 0;
 	}
@@ -354,7 +328,7 @@ SOAP_SOCKET DequeueSocket()
 
 	sock = gQueSocket[gQueHeadSktIdx++];
 
-	if (gQueHeadSktIdx >= MAX_QUEUE)
+	if (gQueHeadSktIdx >= gMaxQueue)
 	{
 		gQueHeadSktIdx = 0;
 	}

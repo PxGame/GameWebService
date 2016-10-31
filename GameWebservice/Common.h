@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+# include "pub.h"
+
 
 #if defined(WIN32)
 # define FIXEDTHREADFUNC(x) ((void(*)(void*))(x))
@@ -10,17 +12,15 @@
 # define SLEEP(x) usleep(x*1000)
 #endif
 
-
-//====== configuration
-# define BACKLOG (100)
-# define MAX_THR (10)			//线程池大小
-# define MAX_QUEUE (1000)		//请求队列大小
-# define AUTH_USERID "admin"		//用户名
-# define AUTH_PWD "123456"		//密码
-//base 64 [AUTH_USERID:AUTH_PWD] > Authorization:Basic YWRtaW46MTIzNDU2
-
 //server
 extern int gPort;
+extern int gBackLog;
+extern int gMaxThr;
+extern int gMaxQueue;
+
+extern char* gAuthUserId;
+extern char* gAuthPwd;
+//base 64 [AUTH_USERID:AUTH_PWD] > Authorization:Basic YWRtaW46MTIzNDU2
 
 //db
 extern char* gDbHostName;
@@ -28,5 +28,7 @@ extern char* gDbUserName;
 extern char* gDbPassword;
 
 int CheckAuthorization(struct soap*);
+
+string TranslateIpToString(unsigned long ip);
 
 #endif

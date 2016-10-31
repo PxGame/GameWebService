@@ -2,9 +2,9 @@ CREATE DATABASE  IF NOT EXISTS `game_db` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `game_db`;
 -- MySQL dump 10.13  Distrib 5.7.12, for Win64 (x86_64)
 --
--- Host: 192.168.1.58    Database: game_db
+-- Host: 192.168.2.115    Database: game_db
 -- ------------------------------------------------------
--- Server version	5.6.28-0ubuntu0.15.04.1
+-- Server version	5.7.16-0ubuntu0.16.10.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -31,7 +31,7 @@ CREATE TABLE `log` (
   `time` datetime DEFAULT NULL COMMENT '登录时间',
   `status` varchar(255) DEFAULT '',
   PRIMARY KEY (`index`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -202,4 +202,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-10-31 18:13:59
+-- Dump completed on 2016-10-31 23:56:11

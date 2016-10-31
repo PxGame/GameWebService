@@ -26,83 +26,142 @@ sql::Connection * DBManager::GetNewConnection()
 
 bool DBManager::QueryUserInfo(Connection* conn, const char* name, UserInfo& info)
 {
-	auto_ptr<PreparedStatement >  pstmt;
-	auto_ptr<ResultSet > res;
+	PreparedStatement*  stmt = 0;
+	ResultSet* res = 0;
+	bool bRet = false;
 
-	pstmt.reset(conn->prepareStatement("call user_query(?)"));
-	pstmt->setString(1, name);
-	if (!pstmt->execute())
-	{//没有返回值
-		return false;
-	}
-	res.reset(pstmt->getResultSet());
-	if (res->findColumn("_error") != 0)
+	try
 	{
-		return false;
-	}
+		stmt = conn->prepareStatement("call user_query(?)");
+		stmt->setString(1, name);
+		if (stmt->execute())
+		{//有返回值
+			res = stmt->getResultSet();
 
-	if (!res->next())
+			if (res->findColumn("_error") == 0 && res->next())
+			{
+				info.name = res->getString("name").c_str();
+				info.pwd = res->getString("pwd").c_str();
+				info.createtime = res->getString("createtime").c_str();
+				info.lastlogintime = res->getString("lastlogintime").c_str();
+				info.lastloginip = res->getString("lastloginip").c_str();
+				info.logintoken = res->getString("logintoken").c_str();
+				info.logincount = res->getInt("logincount");
+
+				bRet = true;
+			}
+		}
+	}
+	catch (exception& e)
 	{
-		return false;	
+		fprintf(stderr, "QueryUserInfo is exception:%s\n", e.what());
+		bRet = false;
 	}
 
-	info.name = res->getString("name").c_str();
-	info.pwd = res->getString("pwd").c_str();
-	info.createtime = res->getString("createtime").c_str();
-	info.lastlogintime = res->getString("lastlogintime").c_str();
-	info.lastloginip = res->getString("lastloginip").c_str();
-	info.logintoken = res->getString("logintoken").c_str();
-	info.logincount = res->getInt("logincount");
+	if (res != 0)
+	{
+		delete res;
+	}
 
-	while (res->next()) {}
-	pstmt->close();
+	if (stmt != 0)
+	{
+		while (stmt->getMoreResults())
+		{
+			delete stmt->getResultSet();
+		}
 
+		delete stmt;
+	}
 	return true;
 }
 
 bool DBManager::RegistUser(Connection* conn, const char* name, const char* pwd, const char* ip)
 {
-	auto_ptr<PreparedStatement >  pstmt;
-	auto_ptr<ResultSet > res;
+	PreparedStatement*  stmt = 0;
+	ResultSet* res = 0;
+	bool bRet = false;
 
-	pstmt.reset(conn->prepareStatement("call user_regist(?,?,?)"));
-	pstmt->setString(1, name);
-	pstmt->setString(2, pwd);
-	pstmt->setString(3, ip);
-	if (!pstmt->execute())
-	{//没有返回值
-		return true;
-	}
-	res.reset(pstmt->getResultSet());
-
-	bool bRet = res->findColumn("_error") != 0;
-	if (bRet)
+	try
 	{
-		bRet = res->getBoolean("_ret");
+		stmt = conn->prepareStatement("call user_regist(?,?,?)");
+		stmt->setString(1, name);
+		stmt->setString(2, pwd);
+		stmt->setString(3, ip);
+		if (stmt->execute())
+		{//有返回值
+			res = stmt->getResultSet();
+
+			if (res->findColumn("_error") == 0 && res->next())
+			{
+				bRet = res->getBoolean("_ret");
+			}
+		}
+	}
+	catch (exception& e)
+	{
+		fprintf(stderr, "RegistUser is exception:%s\n", e.what());
+		bRet = false;
 	}
 
-	while (res->next()) {}
-	pstmt->close();
+	if (res != 0)
+	{
+		delete res;
+	}
+
+	if (stmt != 0)
+	{
+		while (stmt->getMoreResults())
+		{
+			delete stmt->getResultSet();
+		}
+
+		delete stmt;
+	}
+
 	return bRet;
 }
 
 bool DBManager::LoginUpdate(Connection * conn, const char * name, const char * ip, const char * token)
 {
-	auto_ptr<PreparedStatement >  pstmt;
-	auto_ptr<ResultSet > res;
+	PreparedStatement*  stmt = 0;
+	ResultSet* res = 0;
+	bool bRet = false;
 
-	pstmt.reset(conn->prepareStatement("call user_login_update(?,?,?)"));
-	pstmt->setString(1, name);
-	pstmt->setString(2, ip);
-	pstmt->setString(3, token);
-	if (!pstmt->execute())
-	{//没有返回值
-		return true;
+	try
+	{
+		stmt = conn->prepareStatement("call user_login_update(?,?,?)");
+		stmt->setString(1, name);
+		stmt->setString(2, ip);
+		stmt->setString(3, token);
+		if (stmt->execute())
+		{//有返回值
+			res = stmt->getResultSet();
+			bRet = res->findColumn("_error") == 0;
+		}
+		else
+		{
+			bRet = true;
+		}
+	}
+	catch (exception& e)
+	{
+		fprintf(stderr, "LoginUpdate is exception:%s\n", e.what());
+		bRet = false;
 	}
 
-	res.reset(pstmt->getResultSet());
-	bool bRet = res->findColumn("_error") != 0;
-	while (res->next()){}
-	pstmt->close();
+	if (res != 0)
+	{
+		delete res;
+	}
+
+	if (stmt != 0)
+	{
+		while (stmt->getMoreResults())
+		{
+			delete stmt->getResultSet();
+		}
+
+		delete stmt;
+	}
 	return bRet;
 }
