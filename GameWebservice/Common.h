@@ -26,8 +26,7 @@ extern char* gAuthPwd;
 extern char* gDbHostName;
 extern char* gDbUserName;
 extern char* gDbPassword;
-
-int CheckAuthorization(struct soap*);
+extern int gDbMaxConnPool;
 
 string TranslateIpToString(unsigned long ip);
 

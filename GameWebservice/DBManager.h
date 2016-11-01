@@ -3,8 +3,6 @@
 
 # include "pub.h"
 
-using namespace sql;
-
 typedef struct UserInfo
 {
 	string name;
@@ -18,22 +16,64 @@ typedef struct UserInfo
 
 class DBManager
 {
-public:
-	DBManager(const char* hostName, const char* userName, const char* password);
+private:
+	DBManager() {}
+	DBManager(
+		string hostName,
+		string userName,
+		string password,
+		int maxConn);
 	~DBManager();
 
 private:
-	SQLString _hostName;
-	SQLString _userName;
-	SQLString _password;
+	string _hostName;
+	string _userName;
+	string _password;
+	int _maxPoolSize;
 
-	MUTEX_TYPE _newConnMutex;
+	Driver* _driver;
+
+	queue<Connection*> _connPool;
+	int _curPoolSize;
+
+	MUTEX_TYPE _threadMutex;
+
+	//pool
+public:
+	Connection* GetConnection();
+	void ReleaseConnection(Connection* conn);
+private:
+	Connection* CreateConnection();
+	void InitConnectionPool(int initSize);
+	void DestoryConnection(Connection* conn);
+	void DestoryPool();
+
+private:
+	static DBManager* _instance;
 
 public:
-	Connection* GetNewConnection();
-	bool QueryUserInfo(Connection* conn, const char* name, UserInfo& info);
-	bool RegistUser(Connection* conn, const char* name, const char* pwd, const char* ip);
-	bool LoginUpdate(Connection* conn, const char* name, const char* ip, const char* token);
+	static void Create(
+		const string& hostName,
+		const string& userName,
+		const string& password,
+		int maxConn);
+	static DBManager* get();
+
+	//sql
+	static bool QueryUserInfo(
+		Connection* conn, 
+		const string& name, 
+		UserInfo& info);
+	static bool RegistUser(
+		Connection* conn, 
+		const string& name, 
+		const string& pwd, 
+		const string& ip);
+	static bool LoginUpdate(
+		Connection* conn, 
+		const string& name, 
+		const string& ip, 
+		const string& token);
 };
 
 #endif // !DBMANAGER_H

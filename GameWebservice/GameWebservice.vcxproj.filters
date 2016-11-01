@@ -42,19 +42,13 @@
     <ClCompile Include="pub.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ProcessHttpForm.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ProcessHttpGet.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ProcessHttpPost.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Common.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="DBManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="GSoapManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -87,19 +81,13 @@
     <ClInclude Include="pub.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessHttpForm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcessHttpGet.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcessHttpPost.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="DBManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GSoapManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,30 +1,178 @@
 # include "DBManager.h"
 # include "pub.h"
 
-DBManager::DBManager(const char* hostName, const char* userName, const char* password)
+DBManager::DBManager(
+	string hostName,
+	string userName,
+	string password,
+	int maxConn)
 {
 	_hostName = hostName;
 	_userName = userName;
 	_password = password;
+	_maxPoolSize = maxConn;
 
-	MUTEX_SETUP(_newConnMutex);
+	_driver = get_driver_instance();
+
+	_curPoolSize = 0;
+
+	MUTEX_SETUP(_threadMutex);
+
+	//初始化连接池
+	InitConnectionPool(_maxPoolSize / 2);
 }
 
 DBManager::~DBManager()
 {
-	MUTEX_CLEANUP(_newConnMutex);
+	MUTEX_CLEANUP(_threadMutex);
 }
 
-sql::Connection * DBManager::GetNewConnection()
+Connection * DBManager::GetConnection()
 {
-	sql::Connection* conn = 0;
-	MUTEX_LOCK(_newConnMutex);
-	conn = sql::mysql::get_mysql_driver_instance()->connect(_hostName, _userName, _password);
-	MUTEX_UNLOCK(_newConnMutex);
+	Connection* conn = 0;
+	MUTEX_LOCK(_threadMutex);
+
+	if (_connPool.size() > 0)
+	{//连接池还有可用连接
+		conn = _connPool.front();
+		_connPool.pop();
+
+		if (conn->isClosed())
+		{//连接无效
+			delete conn;
+			conn = CreateConnection();
+		}
+	}
+	else
+	{
+		if (_curPoolSize < _maxPoolSize)
+		{//还可以创建新的连接
+			conn = CreateConnection();
+			if (0 != conn)
+			{
+				++_curPoolSize;
+			}
+		}
+	}
+	
+	MUTEX_UNLOCK(_threadMutex);
 	return conn;
 }
 
-bool DBManager::QueryUserInfo(Connection* conn, const char* name, UserInfo& info)
+void DBManager::ReleaseConnection(Connection * conn)
+{
+	if (0 != conn)
+	{
+		MUTEX_LOCK(_threadMutex);
+
+		_connPool.push(conn);
+
+		MUTEX_UNLOCK(_threadMutex);
+	}
+}
+
+Connection * DBManager::CreateConnection()
+{
+	Connection* conn = 0;
+
+	try
+	{
+		conn = _driver->connect(_hostName.c_str(), _userName.c_str(), _password.c_str());
+	}
+	catch (const std::exception& e)
+	{
+		conn = 0;
+		fprintf(stderr, "DBManager::CreateConnection exception:%s\n", e.what());
+	}
+
+	return conn;
+}
+
+void DBManager::InitConnectionPool(int initSize)
+{
+	Connection* conn = 0;
+
+	//首先销毁原有连接
+	DestoryPool();
+
+	MUTEX_LOCK(_threadMutex);
+
+	for (int i = 0; i < initSize; i++)
+	{
+		conn = CreateConnection();
+		if (0 != conn)
+		{
+			_connPool.push(conn);
+			++_curPoolSize;
+		}
+		else
+		{
+			fprintf(stderr, "DBManager::InitConnectionPool error.\n");
+		}
+	}
+
+	MUTEX_UNLOCK(_threadMutex);
+}
+
+void DBManager::DestoryConnection(Connection * conn)
+{
+	if (0 != conn)
+	{
+		try
+		{
+			conn->close();
+		}
+		catch (const std::exception& e)
+		{
+			fprintf(stderr, "DBManager::DestoryConnection exception:%s\n", e.what());
+		}
+		delete conn;
+	}
+}
+
+void DBManager::DestoryPool()
+{
+	MUTEX_LOCK(_threadMutex);
+
+	Connection* conn;
+	while (_connPool.size() > 0)
+	{
+		conn = _connPool.front();
+		_connPool.pop();
+
+		DestoryConnection(conn);
+	}
+
+	_curPoolSize = 0;
+
+	MUTEX_UNLOCK(_threadMutex);
+}
+
+//===================================================================
+DBManager* DBManager::_instance = 0;
+
+void DBManager::Create(
+	const string& hostName, 
+	const string& userName, 
+	const string& password,
+	int maxConn)
+{
+	_instance = new DBManager(
+		hostName,
+		userName,
+		password,
+		maxConn);
+}
+
+DBManager * DBManager::get()
+{
+	return _instance;
+}
+
+bool DBManager::QueryUserInfo(
+	Connection* conn, 
+	const string& name, 
+	UserInfo& info)
 {
 	PreparedStatement*  stmt = 0;
 	ResultSet* res = 0;
@@ -75,7 +223,11 @@ bool DBManager::QueryUserInfo(Connection* conn, const char* name, UserInfo& info
 	return true;
 }
 
-bool DBManager::RegistUser(Connection* conn, const char* name, const char* pwd, const char* ip)
+bool DBManager::RegistUser(
+	Connection* conn,
+	const string& name,
+	const string& pwd,
+	const string& ip)
 {
 	PreparedStatement*  stmt = 0;
 	ResultSet* res = 0;
@@ -121,7 +273,11 @@ bool DBManager::RegistUser(Connection* conn, const char* name, const char* pwd, 
 	return bRet;
 }
 
-bool DBManager::LoginUpdate(Connection * conn, const char * name, const char * ip, const char * token)
+bool DBManager::LoginUpdate(
+	Connection * conn, 
+	const string& name, 
+	const string& ip, 
+	const string& token)
 {
 	PreparedStatement*  stmt = 0;
 	ResultSet* res = 0;

@@ -12,23 +12,10 @@ char* gAuthUserId = "admin";
 char* gAuthPwd = "123456";
 
 //db
-char* gDbHostName = "tcp://192.168.2.115:3306/game_db";
+char* gDbHostName = "tcp://192.168.1.58:3306/game_db";
 char* gDbUserName = "admin";
 char* gDbPassword = "123456";
-
-//认证用户
-int CheckAuthorization(struct soap* soap)
-{
-	if (!soap->userid || !soap->passwd ||
-		strcmp(soap->userid, gAuthUserId) ||
-		strcmp(soap->passwd, gAuthPwd))
-	{
-		//认证失败 401
-		return 401;
-	}
-
-	return 0;
-}
+int gDbMaxConnPool = 10;
 
 string TranslateIpToString(unsigned long ip)
 {

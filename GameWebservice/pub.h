@@ -2,7 +2,13 @@
 #define PUB_H
 
 # include <iostream>
+# include <queue>
+# include <vector>
+# include <string>
 
+using namespace std;
+
+//gsoap
 # include "soapH.h"
 # include "threads.h"
 # include "httpget.h"
@@ -18,6 +24,6 @@
 # include "cppconn\metadata.h"
 # include "cppconn\exception.h"
 
+using namespace sql;
 
-using namespace std;
 #endif
