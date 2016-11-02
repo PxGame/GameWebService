@@ -181,7 +181,7 @@ bool DBManager::QueryUserInfo(
 	try
 	{
 		stmt = conn->prepareStatement("call user_query(?)");
-		stmt->setString(1, name);
+		stmt->setString(1, name.c_str());
 		if (stmt->execute())
 		{//有返回值
 			res = stmt->getResultSet();
@@ -236,9 +236,9 @@ bool DBManager::RegistUser(
 	try
 	{
 		stmt = conn->prepareStatement("call user_regist(?,?,?)");
-		stmt->setString(1, name);
-		stmt->setString(2, pwd);
-		stmt->setString(3, ip);
+		stmt->setString(1, name.c_str());
+		stmt->setString(2, pwd.c_str());
+		stmt->setString(3, ip.c_str());
 		if (stmt->execute())
 		{//有返回值
 			res = stmt->getResultSet();
@@ -286,9 +286,9 @@ bool DBManager::LoginUpdate(
 	try
 	{
 		stmt = conn->prepareStatement("call user_login_update(?,?,?)");
-		stmt->setString(1, name);
-		stmt->setString(2, ip);
-		stmt->setString(3, token);
+		stmt->setString(1, name.c_str());
+		stmt->setString(2, ip.c_str());
+		stmt->setString(3, token.c_str());
 		if (stmt->execute())
 		{//有返回值
 			res = stmt->getResultSet();

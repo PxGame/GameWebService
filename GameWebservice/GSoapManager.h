@@ -14,15 +14,6 @@ typedef struct SoapThreadArg {
 	}
 }SOAPTHREADARG, *PSOAPTHREADARG;
 
-int HttpGetHandler(struct soap* soap);
-int HttpPostHandler(struct soap* soap);
-
-//Post根据mime分配回调
-static struct http_post_handlers ghttpPostHndlers[] =
-{
-	{ "*/*", HttpPostHandler },
-	{ 0 }
-};
 
 class GSoapManager
 {

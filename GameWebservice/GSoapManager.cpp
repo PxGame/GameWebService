@@ -1,7 +1,7 @@
 # include "GSoapManager.h"
 # include "pub.h"
 # include "Common.h"
-# include "DBManager.h"
+# include "HttpProcess.h"
 
 GSoapManager::GSoapManager(
 	int port,
@@ -256,36 +256,3 @@ GSoapManager * GSoapManager::get()
 }
 
 //==========================================
-
-int HttpGetHandler(struct soap* soap)
-{
-	fprintf(stderr, "HttpGetHandler\n");
-	if (GSoapManager::get()->CheckAuthorization(soap))
-	{//认证失败
-		return 401;
-	}
-
-	Connection* ss = DBManager::get()->GetConnection();
-
-	DBManager::get()->RegistUser(ss, "xiangmu", "123", "abc");
-
-	DBManager::get()->ReleaseConnection(ss);
-	soap_response(soap, SOAP_HTML);
-	soap_send(soap, "<html>HttpGetHandler</html>");
-	soap_end_send(soap);
-	return SOAP_OK;
-}
-
-int HttpPostHandler(struct soap* soap)
-{
-	fprintf(stderr, "HttpPostHandler\n");
-	if (GSoapManager::get()->CheckAuthorization(soap))
-	{//认证失败
-		return 401;
-	}
-
-	soap_response(soap, SOAP_HTML);
-	soap_send(soap, "<html>HttpPostHandler</html>");
-	soap_end_send(soap);
-	return SOAP_OK;
-}

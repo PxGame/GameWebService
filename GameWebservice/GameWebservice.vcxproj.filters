@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="JsonCpp">
+      <UniqueIdentifier>{99f8c42f-f6cf-4d2f-a0fb-5ba9e68c0690}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -51,10 +54,25 @@
     <ClCompile Include="GSoapManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="HttpProcess.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="json\json_reader.cpp">
+      <Filter>JsonCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="json\json_value.cpp">
+      <Filter>JsonCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="json\json_writer.cpp">
+      <Filter>JsonCpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="GameWebservice.nsmap" />
     <None Include="soapReadme.md" />
+    <None Include="json\json_valueiterator.inl">
+      <Filter>JsonCpp</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="soapH.h">
@@ -89,6 +107,45 @@
     </ClInclude>
     <ClInclude Include="GSoapManager.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpProcess.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="json\allocator.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\assertions.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\autolink.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\config.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\features.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\forwards.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\json.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\json_tool.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\reader.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\value.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\version.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="json\writer.h">
+      <Filter>JsonCpp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
