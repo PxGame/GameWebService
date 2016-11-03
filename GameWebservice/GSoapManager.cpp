@@ -1,6 +1,7 @@
 # include "GSoapManager.h"
 # include "pub.h"
 # include "Common.h"
+# include "ToolFunc.h"
 # include "HttpProcess.h"
 
 GSoapManager::GSoapManager(

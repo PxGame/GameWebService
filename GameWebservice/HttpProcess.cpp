@@ -3,8 +3,8 @@
 # include "GSoapManager.h"
 # include "DBManager.h"
 # include "Common.h"
+# include "ToolFunc.h"
 
-# include "json\json.h"
 
 enum WebServiceType
 {
@@ -15,13 +15,18 @@ enum WebServiceType
 
 enum StatusCode
 {
+	Exception,
 	Error,
 	NoError,
 	Sucesss,
 	RequestDataFailed,
 	JsonParseFailed,
 	NameInvalid,
-	PwdInvalid
+	PwdInvalid,
+	RegistFaild,
+	QueryUserFailed,
+	LoginUpdateFailed,
+	DBConnectIsNull
 };
 
 //Post根据mime分配回调
@@ -41,10 +46,6 @@ int HttpGetHandler(struct soap* soap)
 		return 401;
 	}
 
-	//Connection* ss = DBManager::get()->GetConnection();
-	//DBManager::get()->RegistUser(ss, "xiangmu", "123", "abc");
-	//DBManager::get()->ReleaseConnection(ss);
-
 	soap_response(soap, SOAP_HTML);
 	soap_send(soap, "<html>HttpGetHandler</html>");
 	soap_end_send(soap);
@@ -55,7 +56,7 @@ int HttpPostHandler(struct soap* soap)
 {
 	fprintf(stderr, "HttpPostHandler\n");
 	Json::Value ret;
-	ret["status"] = StatusCode::NoError;
+	StatusCode status = StatusCode::NoError;
 	try
 	{
 		do
@@ -70,13 +71,13 @@ int HttpPostHandler(struct soap* soap)
 
 			if (soap_http_body(soap, &data, &length) != SOAP_OK)
 			{
-				ret["status"] = StatusCode::RequestDataFailed;
+				status = StatusCode::RequestDataFailed;
 				break;
 			}
 
 			if (length < 1)
 			{
-				ret["status"] = StatusCode::RequestDataFailed;
+				status = StatusCode::RequestDataFailed;
 				break;
 			}
 
@@ -95,15 +96,15 @@ int HttpPostHandler(struct soap* soap)
 	catch (const std::exception& e)
 	{
 		fprintf(stderr, "HttpPostHandler exception:%s\n", e.what());
-		ret["error"] = e.what();
+		status = StatusCode::Exception;
 	}
 
-	if (ret["status"] != StatusCode::Sucesss)
-	{//clear
-		StatusCode temp = (StatusCode)ret["status"].asInt();
+	if (status != StatusCode::Sucesss)
+	{
 		ret.clear();
-		ret["status"] = temp;
 	}
+
+	ret["status"] = status;
 
 	string jsonData = ret.toStyledString();
 
@@ -116,11 +117,21 @@ int HttpPostHandler(struct soap* soap)
 int HttpPost_Regist(struct soap* soap, char *data, int length)
 {
 	Json::Value ret;
-	ret["status"] = StatusCode::NoError;
+	StatusCode status = StatusCode::NoError;
+
+	Connection* conn = 0;
+
 	try
 	{
 		do
 		{
+			conn = DBManager::get()->GetConnection();
+			if (conn == 0)
+			{
+				status = StatusCode::DBConnectIsNull;
+				break;
+			}
+
 			++data;
 			--length;
 
@@ -129,7 +140,7 @@ int HttpPost_Regist(struct soap* soap, char *data, int length)
 
 			if (!reader.parse(data, root))
 			{
-				ret["status"] = StatusCode::JsonParseFailed;
+				status = StatusCode::JsonParseFailed;
 				break;
 			}
 
@@ -137,37 +148,60 @@ int HttpPost_Regist(struct soap* soap, char *data, int length)
 			string pwd;
 			if (root["name"].isNull() || (name = root["name"].asString()).empty())
 			{
-				ret["status"] = StatusCode::NameInvalid;
+				status = StatusCode::NameInvalid;
 				break;
 			}
 			if (root["pwd"].isNull() || (pwd = root["pwd"].asString()).empty())
 			{
-				ret["status"] = StatusCode::PwdInvalid;
+				status = StatusCode::PwdInvalid;
 				break;
 			}
 
-			Connection* conn = DBManager::get()->GetConnection();
-			bool bRet = DBManager::get()->RegistUser(conn, name, pwd, TranslateIpToString(soap->ip));
-			DBManager::get()->ReleaseConnection(conn);
-			if (bRet)
+			UserInfo userInfo;
+			string ip = TranslateIpToString(soap->ip);
+			string token;
+			bool bRet = DBManager::get()->RegistUser(conn, name, pwd, ip);
+			if (!bRet)
 			{
-				ret["status"] = StatusCode::Sucesss;
+				status = StatusCode::RegistFaild;
+				break;
 			}
+
+			bRet = DBManager::get()->QueryUserInfo(conn, name, userInfo);
+			if (!bRet)
+			{
+				status = StatusCode::QueryUserFailed;
+				break;
+			}
+
+			token = GenericUserToken(userInfo);
+
+			bRet = DBManager::get()->LoginUpdate(conn, name, ip, token);
+			if (!bRet)
+			{
+				status = StatusCode::LoginUpdateFailed;
+				break;
+			}
+
+			ret["token"] = token;
+
+			status = StatusCode::Sucesss;
 		} while (false);
 	}
 	catch (const std::exception& e)
 	{
 		fprintf(stderr, "HttpPost_Regist exception:%s\n", e.what());
-		ret["status"] = StatusCode::Error;
-		ret["error"] = e.what();
+		ret["status"] = StatusCode::Exception;
+	}
+	DBManager::get()->ReleaseConnection(conn);
+
+
+	if (status != StatusCode::Sucesss)
+	{
+		ret.clear();
 	}
 
-	if (ret["status"] != StatusCode::Sucesss)
-	{//clear
-		StatusCode temp = (StatusCode)ret["status"].asInt();
-		ret.clear();
-		ret["status"] = temp;
-	}
+	ret["status"] = status;
 
 	string jsonData = ret.toStyledString();
 

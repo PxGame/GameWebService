@@ -2,7 +2,7 @@ CREATE DATABASE  IF NOT EXISTS `game_db` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `game_db`;
 -- MySQL dump 10.13  Distrib 5.7.12, for Win64 (x86_64)
 --
--- Host: 192.168.2.115    Database: game_db
+-- Host: 192.168.2.250    Database: game_db
 -- ------------------------------------------------------
 -- Server version	5.7.16-0ubuntu0.16.10.1
 
@@ -86,7 +86,7 @@ UNLOCK TABLES;
 /*!50003 SET character_set_results = utf8 */ ;
 /*!50003 SET collation_connection  = utf8_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`admin`@`%` PROCEDURE `user_login_update`(in n varchar(255), in i varchar(255), in t varchar(255))
 begin
@@ -127,7 +127,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8 */ ;
 /*!50003 SET collation_connection  = utf8_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`admin`@`%` PROCEDURE `user_query`(in n varchar(255))
 BEGIN
@@ -158,7 +158,7 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8 */ ;
 /*!50003 SET collation_connection  = utf8_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`admin`@`%` PROCEDURE `user_regist`(in n varchar(255), in p varchar(255), in i varchar(255))
 BEGIN
@@ -169,22 +169,22 @@ BEGIN
 	declare continue handler for sqlexception set _error = true;#非声明语句必须放在所有非声明语句的后面，否者会报错。
     
     start transaction;
+		
+        if (char_length(n) != 0 and char_length(p) != 0) then
+			select count(*) into _cnt from user where user.name = n;
+			if (_cnt = 0) then
+				set _ret = true;
+				insert into user(name,pwd,createtime) value(n,p,_time);
+				insert into log(name,ip,time, status) value(n,i,_time,'regist');
+			end if;
+        end if;
     
-		select count(*) into _cnt from user where user.name = n;
-		if (_cnt = 0) then
-			set _ret = true;
-			insert into user(name,pwd,createtime) value(n,p,_time);
-			insert into log(name,ip,time, status) value(n,i,_time,'regist');
-		else
-			set _ret = false;
-		end if;
-        
 	if _error = false then
 		commit;
-		select _ret;
+		SELECT _ret;
 	else
 		rollback;
-        select _error;
+SELECT _error;
 	end if;
 END ;;
 DELIMITER ;
@@ -202,4 +202,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-10-31 23:56:11
+-- Dump completed on 2016-11-04  0:27:05

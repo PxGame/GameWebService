@@ -5,8 +5,18 @@
 # include <queue>
 # include <vector>
 # include <string>
+# include <codecvt>
 
 using namespace std;
+
+//json
+# include "json\json.h"
+
+//boost
+# include "boost\uuid\uuid.hpp"
+# include "boost\uuid\uuid_generators.hpp"
+# include "boost\uuid\uuid_io.hpp"
+# include "boost\lexical_cast.hpp"
 
 //gsoap
 # include "soapH.h"

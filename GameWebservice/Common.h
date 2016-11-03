@@ -3,15 +3,6 @@
 
 # include "pub.h"
 
-
-#if defined(WIN32)
-# define FIXEDTHREADFUNC(x) ((void(*)(void*))(x))
-# define SLEEP(x) Sleep(x)
-#elif defined(_POSIX_THREADS) || defined(_SC_THREADS)
-# define FIXEDTHREADFUNC(x) (x)
-# define SLEEP(x) usleep(x*1000)
-#endif
-
 //server
 extern int gPort;
 extern int gBackLog;
@@ -27,7 +18,5 @@ extern char* gDbHostName;
 extern char* gDbUserName;
 extern char* gDbPassword;
 extern int gDbMaxConnPool;
-
-string TranslateIpToString(unsigned long ip);
 
 #endif

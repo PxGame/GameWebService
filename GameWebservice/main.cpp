@@ -3,7 +3,6 @@
 # include "DBManager.h"
 # include "GSoapManager.h"
 # include "GameWebservice.nsmap"//该文件不要重复包含，会产生重复定义
-# include "json\json.h"
 
 int main(int argc, char* argv[])
 {
