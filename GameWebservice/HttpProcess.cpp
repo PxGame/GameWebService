@@ -27,7 +27,7 @@ enum StatusCode
 //Post根据mime分配回调
 struct http_post_handlers ghttpPostHndlers[] =
 {
-	{ "*/*", HttpPostHandler },
+	{ "POST", HttpPostHandler },
 	{ 0 }
 };
 

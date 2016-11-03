@@ -14,6 +14,22 @@ typedef struct SoapThreadArg {
 	}
 }SOAPTHREADARG, *PSOAPTHREADARG;
 
+typedef struct SocketArg
+{
+	SOAP_SOCKET socket;
+	unsigned long ip;
+	
+	SocketArg() 
+	{
+		socket = 0;
+		ip = 0;
+	}
+	SocketArg(SOAP_SOCKET s, unsigned long i)
+	{
+		socket = s;
+		ip = i;
+	}
+}SOCKETARG,*PSOCKETARG;
 
 class GSoapManager
 {
@@ -41,7 +57,7 @@ private:
 
 	vector<struct soap*> _soapPool;
 	vector<THREAD_TYPE> _thrPool;
-	queue<SOAP_SOCKET> _ssockPool;
+	queue<SOCKETARG> _ssockPool;
 
 	struct soap _mainSoap;
 
@@ -59,8 +75,8 @@ public:
 	void WaitThread();
 
 private:
-	int Enqueue(SOAP_SOCKET ssock);
-	SOAP_SOCKET Dequeue();
+	int Enqueue(SOCKETARG ssock);
+	SOCKETARG Dequeue();
 
 private:
 	static void* LoopThread(void* arg);

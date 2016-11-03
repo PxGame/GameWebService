@@ -66,7 +66,7 @@ void GSoapManager::Destory()
 	fprintf(stderr, "Destory start.\n");
 	for (int i = 0; i < _maxThr; i++)
 	{
-		while (Enqueue(SOAP_INVALID_SOCKET) == SOAP_EOM)
+		while (Enqueue(SOCKETARG(SOAP_INVALID_SOCKET, 0)) == SOAP_EOM)
 		{
 			SLEEP(1);
 		}
@@ -116,7 +116,7 @@ void GSoapManager::Run()
 		fprintf(stderr, "accepts socket %lu connection from IP %s\n",
 			(unsigned long)ssTemp, TranslateIpToString(_mainSoap.ip).c_str());
 
-		while (Enqueue(ssTemp) == SOAP_EOM)
+		while (Enqueue(SOCKETARG(ssTemp, _mainSoap.ip)) == SOAP_EOM)
 		{
 			SLEEP(1);
 		}
@@ -142,7 +142,7 @@ void GSoapManager::WaitThread()
 	THREAD_JOIN(_mainLoopThr);
 }
 
-int GSoapManager::Enqueue(SOAP_SOCKET ssock)
+int GSoapManager::Enqueue(SOCKETARG ssock)
 {
 	int status = SOAP_OK;
 	MUTEX_LOCK(_mutexThr);
@@ -162,9 +162,9 @@ int GSoapManager::Enqueue(SOAP_SOCKET ssock)
 	return status;
 }
 
-SOAP_SOCKET GSoapManager::Dequeue()
+SOCKETARG GSoapManager::Dequeue()
 {
-	SOAP_SOCKET ssock;
+	SOCKETARG ssock;
 
 	MUTEX_LOCK(_mutexThr);
 
@@ -197,11 +197,14 @@ void * GSoapManager::ProcessThread(void * arg)
 	SoapThreadArg* thrArg = (SoapThreadArg*)arg;
 	GSoapManager* manager = thrArg->main;
 	struct soap* soap = manager->_soapPool[thrArg->index];
-
+	SOCKETARG sockArg;
 	fprintf(stderr, "ProcessThread start %d.\n", thrArg->index);
 	while (true)
 	{
-		soap->socket = manager->Dequeue();
+		sockArg = manager->Dequeue();
+		soap->socket = sockArg.socket;
+		soap->ip = sockArg.ip;
+
 		if (!soap_valid_socket(soap->socket))
 		{
 			break;

@@ -63,22 +63,22 @@ BEGIN
 	declare continue handler for sqlexception set _error = true;#非声明语句必须放在所有非声明语句的后面，否者会报错。
     
     start transaction;
+		
+        if (char_length(n) != 0 and char_length(p) != 0) then
+			select count(*) into _cnt from user where user.name = n;
+			if (_cnt = 0) then
+				set _ret = true;
+				insert into user(name,pwd,createtime) value(n,p,_time);
+				insert into log(name,ip,time, status) value(n,i,_time,'regist');
+			end if;
+        end if;
     
-		select count(*) into _cnt from user where user.name = n;
-		if (_cnt = 0) then
-			set _ret = true;
-			insert into user(name,pwd,createtime) value(n,p,_time);
-			insert into log(name,ip,time, status) value(n,i,_time,'regist');
-		else
-			set _ret = false;
-		end if;
-        
 	if _error = false then
 		commit;
-		select _ret;
+		SELECT _ret;
 	else
 		rollback;
-        select _error;
+SELECT _error;
 	end if;
 END$$
 
