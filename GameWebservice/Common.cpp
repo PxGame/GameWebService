@@ -11,7 +11,7 @@ char* gAuthUserId = "admin";
 char* gAuthPwd = "123456";
 
 //db
-char* gDbHostName = "tcp://192.168.1.58:3306/game_db";
+char* gDbHostName = "tcp://192.168.2.250:3306/game_db";
 char* gDbUserName = "admin";
 char* gDbPassword = "123456";
 int gDbMaxConnPool = 10;

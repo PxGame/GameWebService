@@ -10,13 +10,13 @@
 using namespace std;
 
 //json
-# include "json.h"
+# include "json\json.h"
 
 //boost
-# include "uuid\uuid.hpp"
-# include "uuid\uuid_generators.hpp"
-# include "uuid\uuid_io.hpp"
-# include "lexical_cast.hpp"
+# include "boost\uuid\uuid.hpp"
+# include "boost\uuid\uuid_generators.hpp"
+# include "boost\uuid\uuid_io.hpp"
+# include "boost\lexical_cast.hpp"
 
 //gsoap
 # include "soapH.h"
@@ -26,8 +26,14 @@ using namespace std;
 # include "httpform.h"
 
 //mysql
-#pragma comment( lib , "libmysql.lib" )  
+# include "mysql_connection.h"
+# include "mysql_driver.h"
+# include "cppconn\driver.h"
+# include "cppconn\statement.h"
+# include "cppconn\prepared_statement.h"
+# include "cppconn\metadata.h"
+# include "cppconn\exception.h"
 
-# include "mysql.h"
+using namespace sql;
 
 #endif
