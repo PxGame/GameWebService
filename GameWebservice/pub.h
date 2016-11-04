@@ -26,16 +26,8 @@ using namespace std;
 # include "httpform.h"
 
 //mysql
-#pragma comment(lib, "mysqlcppconn.lib")
+#pragma comment( lib , "libmysql.lib" )  
 
-# include "mysql_connection.h"
-# include "mysql_driver.h"
-# include "cppconn\driver.h"
-# include "cppconn\statement.h"
-# include "cppconn\prepared_statement.h"
-# include "cppconn\metadata.h"
-# include "cppconn\exception.h"
-
-using namespace sql;
+# include "mysql.h"
 
 #endif
