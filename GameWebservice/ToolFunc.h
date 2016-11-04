@@ -22,4 +22,10 @@ string GenericUserToken(UserInfo& userInfo);
 
 string WStringToUtf8(const wstring& str);
 
+//int转byte
+void  IntToByte(INT32 i, byte *bytes);
+
+//byte转int
+INT32 BytesToInt(byte* bytes);
+
 # endif

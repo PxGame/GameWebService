@@ -37,3 +37,23 @@ string WStringToUtf8(const wstring & str)
 	wstring_convert<codecvt_utf8<wchar_t>> conv;
 	return conv.to_bytes(str);
 }
+
+//int转byte
+void  IntToByte(INT32 i, byte *bytes)
+{
+	bytes[0] = (byte)(0xff & i);
+	bytes[1] = (byte)((0xff00 & i) >> 8);
+	bytes[2] = (byte)((0xff0000 & i) >> 16);
+	bytes[3] = (byte)((0xff000000 & i) >> 24);
+	return;
+}
+
+//byte转int
+INT32 BytesToInt(byte* bytes)
+{
+	INT32 addr = bytes[0] & 0xFF;
+	addr |= ((bytes[1] << 8) & 0xFF00);
+	addr |= ((bytes[2] << 16) & 0xFF0000);
+	addr |= ((bytes[3] << 24) & 0xFF000000);
+	return addr;
+}
