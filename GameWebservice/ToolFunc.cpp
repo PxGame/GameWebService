@@ -38,8 +38,7 @@ string WStringToUtf8(const wstring & str)
 	return conv.to_bytes(str);
 }
 
-//int转byte
-void  IntToByte(INT32 i, byte *bytes)
+void  IntToByte(int32_t i, char *bytes)
 {
 	bytes[0] = (byte)(0xff & i);
 	bytes[1] = (byte)((0xff00 & i) >> 8);
@@ -48,10 +47,9 @@ void  IntToByte(INT32 i, byte *bytes)
 	return;
 }
 
-//byte转int
-INT32 BytesToInt(byte* bytes)
+int32_t BytesToInt(char* bytes)
 {
-	INT32 addr = bytes[0] & 0xFF;
+	int32_t addr = bytes[0] & 0xFF;
 	addr |= ((bytes[1] << 8) & 0xFF00);
 	addr |= ((bytes[2] << 16) & 0xFF0000);
 	addr |= ((bytes[3] << 24) & 0xFF000000);

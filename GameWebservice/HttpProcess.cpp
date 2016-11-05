@@ -138,7 +138,8 @@ int HttpPostHandler(struct soap* soap)
 
 	ret["status"] = status;
 
-	string jsonData = ret.toStyledString();
+	Json::FastWriter fastWriter;
+	string jsonData = fastWriter.write(ret);
 
 	soap_response(soap, SOAP_HTML);
 	soap_send(soap, jsonData.c_str());
@@ -240,7 +241,8 @@ int HttpPost_Regist(struct soap* soap, HTTPDATA& httpData)
 
 	ret["status"] = status;
 
-	string jsonData = ret.toStyledString();
+	Json::FastWriter fastWriter;
+	string jsonData = fastWriter.write(ret);
 
 	soap_response(soap, SOAP_HTML);
 	soap_send(soap, jsonData.c_str());
@@ -343,7 +345,8 @@ int HttpPost_LoginFromPwd(struct soap* soap, HTTPDATA& httpData)
 
 	ret["status"] = status;
 
-	string jsonData = ret.toStyledString();
+	Json::FastWriter fastWriter;
+	string jsonData = fastWriter.write(ret);
 
 	soap_response(soap, SOAP_HTML);
 	soap_send(soap, jsonData.c_str());
@@ -436,7 +439,8 @@ int HttpPost_LoginFromToken(struct soap* soap, HTTPDATA& httpData)
 
 	ret["status"] = status;
 
-	string jsonData = ret.toStyledString();
+	Json::FastWriter fastWriter;
+	string jsonData = fastWriter.write(ret);
 
 	soap_response(soap, SOAP_HTML);
 	soap_send(soap, jsonData.c_str());
@@ -450,11 +454,11 @@ void ParseData(char* data, size_t length, HTTPDATA& httpData)
 	//type(4byte) | configlength(4byte) | configData(configlength) | binaryData(length - 8byte - configlength)
 
 	//类型
-	httpData.type = (WebServiceType)BytesToInt((byte*)data);
+	httpData.type = (WebServiceType)BytesToInt(data);
 	data += 4;
 
 	//配置信息
-	httpData.configLength = BytesToInt((byte*)data);
+	httpData.configLength = BytesToInt(data);
 	data += 4;
 	httpData.configData = data;
 

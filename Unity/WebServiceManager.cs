@@ -4,30 +4,29 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-
 public enum WebServiceType
 {
-    UnKnown,
-    Regist,
-    LoginFromPwd,
-    LoginFromToken
+	None,
+	Regist,
+	LoginFromPwd,
+	LoginFromToken
 }
 
 public enum StatusCode
 {
-    Exception,
-    Error,
-    NoError,
-    Sucesss,
-    RequestDataFailed,
-    JsonParseFailed,
-    NameInvalid,
-    PwdInvalid,
-    RegistFaild,
-    QueryUserFailed,
-    LoginUpdateFailed,
-    DBConnectIsNull,
-    LoginFailed
+	Sucesss,
+	Error,
+	Exception,
+
+	RequestDataFailed,
+	DBConnectFailed,
+	PwdFailed,
+	NameFailed,
+	TokenFailed,
+	JsonParseFailed,
+
+	RegistUserError,
+	LoginUpdateError,
 }
 
 [Serializable]
