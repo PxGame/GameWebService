@@ -34,9 +34,9 @@ typedef struct HttpData
 {
 	WebServiceType type;
 	char* configData;
-	UINT32 configLength;
+	uint32_t configLength;
 	char* binaryData;
-	UINT32 binaryLength;
+	uint32_t binaryLength;
 	HttpData()
 	{
 		type = WebServiceType::None;

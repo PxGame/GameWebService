@@ -173,6 +173,7 @@
     <ClCompile Include="ToolFunc.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="GameWebservice.nsmap" />
     <None Include="soapReadme.md" />
   </ItemGroup>

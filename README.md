@@ -8,7 +8,7 @@
    - libmysqlcppconn-dev
 3. 添加链接库
    - -lpthread
-   - -llibmysqlcppconn
+   - 添加连接库libmysqlcppconn.o 到linklibrary下
 4. 添加编译选项
    - 使用64位编译（m64）
    - 支持c++11

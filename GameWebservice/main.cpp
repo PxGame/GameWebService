@@ -6,13 +6,23 @@
 
 int main(int argc, char* argv[])
 {
-	char operation[64];
-	GSoapManager::Create(gPort, gBackLog, gMaxThr, gMaxQueue, gAuthUserId, gAuthPwd);
-	DBManager::Create(gDbHostName, gDbUserName, gDbPassword, gDbMaxConnPool);
+
+	try
+	{
+		GSoapManager::Create(gPort, gBackLog, gMaxThr, gMaxQueue, gAuthUserId, gAuthPwd);
+		DBManager::Create(gDbHostName, gDbUserName, gDbPassword, gDbMaxConnPool);
+	}
+	catch (const std::exception& e)
+	{
+		fprintf(stderr, "GameWebservice Create exception:%s\n", e.what());
+		return -1;
+	}
+
 	fprintf(stderr, "GameWebservice Launching...\n");
 
 	GSoapManager::get()->RunOnThread();
 
+	//char operation[64];
 	//while (true)
 	//{
 	//	scanf("%s", operation);

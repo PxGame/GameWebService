@@ -73,6 +73,7 @@
   <ItemGroup>
     <None Include="GameWebservice.nsmap" />
     <None Include="soapReadme.md" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="soapH.h">

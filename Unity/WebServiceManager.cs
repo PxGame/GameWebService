@@ -4,29 +4,30 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+
 public enum WebServiceType
 {
-	None,
-	Regist,
-	LoginFromPwd,
-	LoginFromToken
+    UnKnown,
+    Regist,
+    LoginFromPwd,
+    LoginFromToken
 }
 
 public enum StatusCode
 {
-	Sucesss,
-	Error,
-	Exception,
-
-	RequestDataFailed,
-	DBConnectFailed,
-	PwdFailed,
-	NameFailed,
-	TokenFailed,
-	JsonParseFailed,
-
-	RegistUserError,
-	LoginUpdateError,
+    Exception,
+    Error,
+    NoError,
+    Sucesss,
+    RequestDataFailed,
+    JsonParseFailed,
+    NameInvalid,
+    PwdInvalid,
+    RegistFaild,
+    QueryUserFailed,
+    LoginUpdateFailed,
+    DBConnectIsNull,
+    LoginFailed
 }
 
 [Serializable]
@@ -153,7 +154,7 @@ public class WebServiceManager : MonoBehaviour
     {
         byte[] typeByte = BitConverter.GetBytes((Int32)type);
         byte[] configByte = Encoding.UTF8.GetBytes(config);
-        byte[] configSizeByte = BitConverter.GetBytes((Int32)configByte.Length);
+        byte[] configSizeByte = BitConverter.GetBytes((UInt32)configByte.Length);
 
         int bufSize = typeByte.Length + configSizeByte.Length + configByte.Length;
         if (data != null)
@@ -166,11 +167,11 @@ public class WebServiceManager : MonoBehaviour
 
         //消息类型 4 byte
         Array.Copy(typeByte, 0, buf, offset, 4);
-        offset += typeByte.Length;
+        offset += 4;
 
         //消息大小 4 byte
         Array.Copy(configSizeByte, 0, buf, offset, 4);
-        offset += configSizeByte.Length;
+        offset +=4;
 
         //消息
         Array.Copy(configByte, 0, buf, offset, configByte.Length);
